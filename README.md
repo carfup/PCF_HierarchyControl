@@ -39,6 +39,11 @@ JSON Details : (sample with the account table)
 }
 ```
 
+Here is how it will looking between the mapping and the rendering : 
+![](https://carfupstorage.blob.core.windows.net/sharex/2025_02_10_17-04-01_POWERPNT.png)
+
+Each data type will have it's own icon next to the value.
+
 ## Advice for the configuration
 
 - Hide the field label
