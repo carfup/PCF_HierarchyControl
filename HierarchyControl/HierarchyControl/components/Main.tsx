@@ -64,8 +64,12 @@ const App = (props: any) => {
     <div
       id="carfup_HierarchyControl"
       style={{
-        width: props.context.mode.allocatedWidth + "px",
-        height: props.context.mode.allocatedHeight + "px",
+        width:
+          jsonMapping.properties?.width ??
+          props.context.mode.allocatedWidth + "px",
+        height:
+          jsonMapping.properties?.height ??
+          props.context.mode.allocatedHeight + "px",
       }}
     >
       <OrgChartComponent data={data} currentRecordId={recordId} />
@@ -121,7 +125,7 @@ const App = (props: any) => {
         attr.AttributeTypeName == "customer"
           ? `_${attr.LogicalName}_value`
           : attr.LogicalName;
-      fields[index].type = returnType(attr.AttributeTypeName);
+      fields[index].type = returnType(attr);
       fields[index].displayName = attr.DisplayName;
     });
   }
@@ -142,22 +146,23 @@ const App = (props: any) => {
       renameKey(obj, isLookup(jsonMapping.mapping.name), "name", propsTarget);
       renameKey(
         obj,
-        isLookup(jsonMapping.mapping.attribute1),
+        isLookup(jsonMapping.mapping.attribute1!),
         "attribute1",
         propsTarget
       );
       renameKey(
         obj,
-        isLookup(jsonMapping.mapping.attribute2),
+        isLookup(jsonMapping.mapping.attribute2!),
         "attribute2",
         propsTarget
       );
       renameKey(
         obj,
-        isLookup(jsonMapping.mapping.attribute3),
+        isLookup(jsonMapping.mapping.attribute3!),
         "attribute3",
         propsTarget
       );
+      //HIHIH
       targetJson.push(propsTarget);
     });
 
@@ -183,9 +188,9 @@ const App = (props: any) => {
     return fields;
   }
 
-  function returnType(input: string) {
-    let result = input;
-    switch (input) {
+  function returnType(attr: any) {
+    let result = attr.AttributeTypeName;
+    switch (attr.AttributeTypeName) {
       case "owner":
       case "partylist":
       case "customer":
@@ -198,6 +203,16 @@ const App = (props: any) => {
       case "int":
       case "bigint":
         result = "number";
+        break;
+      case "string":
+        switch (attr.attributeDescriptor.FormatName) {
+          case "Url":
+            result = "url";
+            break;
+          case "Phone":
+            result = "phone";
+            break;
+        }
         break;
     }
     return result;
