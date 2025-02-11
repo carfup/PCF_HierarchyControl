@@ -35,9 +35,12 @@ const App = (props: any) => {
             &$select=${fields.map((u) => u.webapiName).join(",")}`
         );
 
-      const getTopParentDataId = getTopParentData.entities.filter(
-        (x: any) => x[`_${jsonMapping.parentField}_value`] == null
-      )[0][jsonMapping.recordIdField];
+      const getTopParentDataId =
+        getTopParentData.entities.length == 0
+          ? recordId
+          : getTopParentData.entities.filter(
+              (x: any) => x[`_${jsonMapping.parentField}_value`] == null
+            )[0][jsonMapping.recordIdField];
 
       // get all records below the top parent
       const getChildrenData =
