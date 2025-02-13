@@ -91,8 +91,10 @@ const App = (props: any) => {
       } else {
         // Getting formatted value for Lookups
         let key = oldKey;
-        const type = fields.find((f: any) => f.webapiName === oldKey)?.type;
-        if (type === "lookup") {
+        const type: string | undefined = fields.find(
+          (f: any) => f.webapiName === oldKey
+        )?.type;
+        if (["lookup", "datetime", "picklist"].includes(type!)) {
           key = `${oldKey}@OData.Community.Display.V1.FormattedValue`;
         }
 
@@ -107,16 +109,17 @@ const App = (props: any) => {
   }
 
   function getValue(value: any, type: string | undefined) {
+    let result = value;
     switch (type) {
-      case "datetime":
-        return props.context.formatting.formatTime(new Date(value));
       case "date":
-        return props.context.formatting.formatDateShort(new Date(value));
+        result = props.context.formatting.formatDateShort(new Date(value));
+        break;
       case "money":
-        return props.context.formatting.formatCurrency(value);
-      default:
-        return value;
+        result = props.context.formatting.formatCurrency(value);
+        break;
     }
+
+    return result == undefined ? null : result;
   }
 
   function getAttributeDetails(em: any) {

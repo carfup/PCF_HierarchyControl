@@ -42,30 +42,27 @@ const OrgChartComponent = (props: any) => {
           const imageDiffVert = 25 + 2;
 
           const attribute1 =
-            d.data.attribute1 != null
+            d.data.attribute1 != null && d.data.attribute1.value != null
               ? `<div style="display:flex;align-items:center" title="${
                   d.data.attribute1.displayName
-                }">${getIcon(d.data.attribute1.type)}&nbsp; ${
-                  d.data.attribute1.value
-                }</div>`
+                }">${getIcon(d.data.attribute1.type)}&nbsp; ${d.data.attribute1
+                  .value!}</div>`
               : "";
 
           const attribute2 =
-            d.data.attribute2 != null
+            d.data.attribute2 != null && d.data.attribute2.value != null
               ? `<div style="display:flex;align-items:center" title="${
                   d.data.attribute2.displayName
-                }">${getIcon(d.data.attribute2.type)}&nbsp; ${
-                  d.data.attribute2.value
-                }</div>`
+                }">${getIcon(d.data.attribute2.type)}&nbsp; ${d.data.attribute2
+                  .value!}</div>`
               : "";
 
           const attribute3 =
-            d.data.attribute3 != null
+            d.data.attribute3 != null && d.data.attribute3.value != null
               ? `<div style="display:flex;align-items:center" title="${
                   d.data.attribute3.displayName
-                }">${getIcon(d.data.attribute3.type)}&nbsp; ${
-                  d.data.attribute3.value
-                }</div>`
+                }">${getIcon(d.data.attribute3.type)}&nbsp; ${d.data.attribute3
+                  .value!}</div>`
               : "";
 
           return ` 
