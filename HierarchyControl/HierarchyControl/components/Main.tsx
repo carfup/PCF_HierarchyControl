@@ -29,18 +29,15 @@ const App = (props: any) => {
         await props.context.webAPI.retrieveMultipleRecords(
           entityTypeName,
           `?$filter=
-            Microsoft.Dynamics.CRM.Above(PropertyName='${
-              jsonMapping.recordIdField
-            }',PropertyValue='${recordId}')
-            &$select=${fields.map((u) => u.webapiName).join(",")}`
+            Microsoft.Dynamics.CRM.Above(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${recordId}') and _${jsonMapping.parentField}_value eq null
+          `
+          //          &$select=${fields.map((u) => u.webapiName).join(",")}
         );
 
       const getTopParentDataId =
         getTopParentData.entities.length == 0
           ? recordId
-          : getTopParentData.entities.filter(
-              (x: any) => x[`_${jsonMapping.parentField}_value`] == null
-            )[0][jsonMapping.recordIdField];
+          : getTopParentData.entities[0][jsonMapping.recordIdField];
 
       // get all records below the top parent
       const getChildrenData =
@@ -50,7 +47,7 @@ const App = (props: any) => {
          Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${
            jsonMapping.recordIdField
          }',PropertyValue='${getTopParentDataId}') 
-         &$select=${fields.map((u) => u.webapiName).join(",")}
+         &$select=${fields.map((f) => f.webapiName).join(",")}
         `
         );
 

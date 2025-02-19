@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest>
-  <control namespace="Carfup" constructor="HierarchyControl" version="1.0.0"
+  <control namespace="Carfup" constructor="HierarchyControl" version="1.0.2"
     display-name-key="Carfup.HierarchyControl"
     description-key="Control allowing you to visualize the hierarchy between records."
     control-type="virtual">

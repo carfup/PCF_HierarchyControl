@@ -31,7 +31,8 @@ const OrgChartComponent = (props: any) => {
             d.data.id == props.currentRecordId ? "#FF0000" : "#E4E2E9";
           const textMainColor = "#08011E";
           const textColor = "#716E7B";
-          const [firstWord, secondWord] = d.data.name.value.split(" ");
+          const [firstWord, secondWord] =
+            d.data.name.value != null ? d.data.name.value!.split(" ") : "";
           const initials = [firstWord, secondWord]
             .map((word) => {
               if (word) return word[0];
@@ -76,7 +77,11 @@ const OrgChartComponent = (props: any) => {
                               -imageDiffVert - 20
                             }px;">   <span style="display: inline-block;background-color: ${getRandomColor()};color: #fff;border-radius: 50%;font-size: 18px;line-height: 40px;width: 40px;height: 40px;text-align: center;margin-left: 20px;font-family:'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;font-weight:600;">${initials}</span></div>
                             <div style="font-size:20px;color:${textMainColor};margin-left:20px;margin-top:10px;"> 
-                              ${d.data.name.value} 
+                              ${
+                                d.data.name.value != null
+                                  ? d.data.name.value
+                                  : ""
+                              } 
                             </div>
                             <div style="color:${textColor};margin-left:20px;margin-top:3px;font-size:12px;"> 
                               ${attribute1}
