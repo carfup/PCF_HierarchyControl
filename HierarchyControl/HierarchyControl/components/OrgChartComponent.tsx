@@ -11,14 +11,45 @@ const OrgChartComponent = (props: any) => {
   const chartRef = useRef(new OrgChart());
 
   function zoom(zoom: string = "in") {
-    if (zoom === "in") {
-      chartRef.current.zoomIn();
-    } else {
-      chartRef.current.zoomOut();
-    }
+    zoom === "in" ? chartRef.current.zoomIn() : chartRef.current.zoomOut();
+  }
+
+  function search(value: string) {
+    // Clear previous higlighting
+    chartRef.current.clearHighlighting();
+
+    // Get chart nodes
+    const data: any = chartRef.current.data() as any;
+
+    // Loop over data and check if input value matches any name
+    data.forEach((d: any) => {
+      if (
+        value != "" &&
+        d.name.value.toLowerCase().includes(value.toLowerCase())
+      ) {
+        // If matches, mark node as highlighted
+        d._highlighted = true;
+      }
+    });
+
+    // Update data and rerender graph
+    chartRef.current.data(data).render();
+    addListener();
+  }
+
+  function addListener() {
+    const data: any = chartRef.current.data() as any;
+
+    // Mark all previously expanded nodes for collapse
+    data.forEach((d: any) =>
+      document
+        .getElementById(`navi_${d.id}`)!
+        .addEventListener("click", () => navigate(d.id))
+    );
   }
 
   props.setZoom(zoom);
+  props.setSearch(search);
 
   // We need to manipulate DOM
   useEffect(() => {
@@ -33,12 +64,12 @@ const OrgChartComponent = (props: any) => {
         .compactMarginBetween((_d) => 50)
         .compactMarginPair((_d) => 80)
         .setActiveNodeCentered(true)
+
         .nodeContent(function (d: any, i, arr, state) {
-          // YOUHPI
           const backgroundColor =
-            d.data.id == props.currentRecordId ? "#FFFFFF" : "#FFFFFF";
+            d.data.id == props.mapping.recordIdValue ? "#FFFFFF" : "#FFFFFF";
           const borderColor =
-            d.data.id == props.currentRecordId ? "#FF0000" : "#E4E2E9";
+            d.data.id == props.mapping.recordIdValue ? "#FF0000" : "#E4E2E9";
           const textMainColor = "#08011E";
           const textColor = "#716E7B";
           const [firstWord, secondWord] =
@@ -81,7 +112,7 @@ const OrgChartComponent = (props: any) => {
                   d.width
                 }px;height:${d.height}px;padding-top:${imageDiffVert - 2}px;padding-left:1px;padding-right:1px'>
                         <div style="font-family: 'Inter', sans-serif;background-color:${backgroundColor};  margin-left:-1px;width:${d.width - 2}px;height:${d.height - imageDiffVert}px;border-radius:10px;border: 1px solid ${borderColor};">
-                            <div style="display:flex;justify-content:flex-end;margin-top:5px;margin-right:8px;color:${textColor}"><a href="${linkToRecord(d.data.id)}">${getIcon("link")}</a></div>
+                            <div style="display:flex;justify-content:flex-end;margin-top:5px;margin-right:8px;color:${textColor}"><span id="navi_${d.data.id}">${getIcon("link")}</span></div>
                             <div style="background-color:${backgroundColor};margin-top:${-imageDiffVert - 20}px;margin-left:${15}px;border-radius:100px;width:50px;height:50px;" ></div>
                             <div style="margin-top:${
                               -imageDiffVert - 20
@@ -104,8 +135,10 @@ const OrgChartComponent = (props: any) => {
                             `;
         })
         .expandAll()
-        .setCentered(props.currentRecordId)
+        .setCentered(props.mapping.recordIdValue)
         .render();
+
+      addListener();
     }
   }, [props.data, d3Container.current]);
 
@@ -129,9 +162,21 @@ const OrgChartComponent = (props: any) => {
     return cellHeight;
   }
 
-  function linkToRecord(id: string) {
-    const currentLocation = window.location.href;
-    return currentLocation.replace(props.currentRecordId, id);
+  function navigate(id: string) {
+    var pageInput = {
+      pageType: "entityrecord",
+      entityName: props.mapping.entityName,
+      entityId: id, //replace with actual ID
+    };
+
+    props.context.navigation.navigateTo(pageInput).then(
+      function success() {
+        // Run code on success
+      },
+      function error() {
+        // Handle errors
+      }
+    );
   }
 
   function getIcon(icon: string) {

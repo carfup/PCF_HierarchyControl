@@ -3,25 +3,27 @@ import * as React from "react";
 import OrgChartComponent from "./OrgChartComponent";
 import { Mapping, fieldDefinition } from "../EntitiesDefinition";
 import { DataFormatter } from "../DataFormatter";
-import { Button } from "@fluentui/react-components";
-//import { ZoomInRegular, ZoomOutRegular } from "@fluentui/react-icons";
+import { Button, Divider, Input } from "@fluentui/react-components";
+//import { ZoomInRegular, ZoomOutRegular, SearchRegular } from "@fluentui/react-icons";
 
 const App = (props: any) => {
   const [data, setData] = useState(null);
 
   const contextInfo = props.context.mode.contextInfo;
-  const recordId = contextInfo.entityId;
-  const entityTypeName = contextInfo.entityTypeName;
+
   const jsonMapping: Mapping = JSON.parse(props.jsonMapping);
+  jsonMapping.recordIdValue = contextInfo.entityId;
+  jsonMapping.entityName = contextInfo.entityTypeName;
   const fields = DataFormatter.extractFields(jsonMapping);
   let primaryIdAttribute = "";
   let clickZoom: any = null;
+  let searchNode: any = null;
 
   useEffect(() => {
     const getAllData = async () => {
       // Get attributes details
       const dataEM = await props.context.utils.getEntityMetadata(
-        entityTypeName,
+        jsonMapping.entityName,
         fields.map((u) => u.name)
       );
 
@@ -31,27 +33,26 @@ const App = (props: any) => {
 
       const getTopParentData =
         await props.context.webAPI.retrieveMultipleRecords(
-          entityTypeName,
+          jsonMapping.entityName,
           `?$filter=
-            Microsoft.Dynamics.CRM.Above(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${recordId}') and _${jsonMapping.parentField}_value eq null
+            Microsoft.Dynamics.CRM.Above(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${jsonMapping.recordIdValue}') and _${jsonMapping.parentField}_value eq null
           `
-          //          &$select=${fields.map((u) => u.webapiName).join(",")}
         );
 
       const getTopParentDataId =
         getTopParentData.entities.length == 0
-          ? recordId
+          ? jsonMapping.recordIdValue
           : getTopParentData.entities[0][jsonMapping.recordIdField];
 
       // get all records below the top parent
       const getChildrenData =
         await props.context.webAPI.retrieveMultipleRecords(
-          entityTypeName,
+          jsonMapping.entityName,
           `?$filter=
-         Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${
-           jsonMapping.recordIdField
-         }',PropertyValue='${getTopParentDataId}') 
-         &$select=${fields.map((f) => f.webapiName).join(",")}
+          Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${
+            jsonMapping.recordIdField
+          }',PropertyValue='${getTopParentDataId}') 
+          &$select=${fields.map((f) => f.webapiName).join(",")}
         `
         );
 
@@ -72,6 +73,11 @@ const App = (props: any) => {
       <Button /*icon={<ZoomOutRegular />} */ onClick={() => zoom("out")}>
         Zoom out
       </Button>
+      <Input
+        /*contentAfter={<SearchRegular aria-label="Enter by voice" />}*/
+        placeholder="Search"
+        onChange={(e: any) => search(e.target.value)}
+      />
 
       <div
         id="carfup_HierarchyControl"
@@ -86,8 +92,10 @@ const App = (props: any) => {
       >
         <OrgChartComponent
           data={data}
-          currentRecordId={recordId}
+          mapping={jsonMapping}
           setZoom={(z: any) => (clickZoom = z)}
+          setSearch={(s: any) => (searchNode = s)}
+          context={props.context}
         />
       </div>
     </div>
@@ -95,6 +103,10 @@ const App = (props: any) => {
 
   function zoom(zoom: string = "in") {
     clickZoom(zoom);
+  }
+
+  function search(value: string) {
+    searchNode(value);
   }
 
   function renameKey(

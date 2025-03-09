@@ -1,9 +1,11 @@
 export interface Mapping {
+  entityName: string;
   parentField: string;
   recordIdField: string;
   mapping: attributesMapping;
   properties?: propertiesMapping;
   isCurrentRecord: boolean;
+  recordIdValue?: string;
 }
 
 export interface attributesMapping {
