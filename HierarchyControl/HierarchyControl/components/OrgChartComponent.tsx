@@ -10,6 +10,16 @@ const OrgChartComponent = (props: any) => {
   const d3Container = useRef(null);
   const chartRef = useRef(new OrgChart());
 
+  function zoom(zoom: string = "in") {
+    if (zoom === "in") {
+      chartRef.current.zoomIn();
+    } else {
+      chartRef.current.zoomOut();
+    }
+  }
+
+  props.setZoom(zoom);
+
   // We need to manipulate DOM
   useEffect(() => {
     if (props.data && d3Container.current) {

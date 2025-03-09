@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import * as React from "react";
 import OrgChartComponent from "./OrgChartComponent";
 import { Mapping, fieldDefinition } from "../EntitiesDefinition";
+import { DataFormatter } from "../DataFormatter";
+import { Button } from "@fluentui/react-components";
+//import { ZoomInRegular, ZoomOutRegular } from "@fluentui/react-icons";
 
 const App = (props: any) => {
   const [data, setData] = useState(null);
@@ -10,8 +13,9 @@ const App = (props: any) => {
   const recordId = contextInfo.entityId;
   const entityTypeName = contextInfo.entityTypeName;
   const jsonMapping: Mapping = JSON.parse(props.jsonMapping);
-  const fields = extractField(jsonMapping);
+  const fields = DataFormatter.extractFields(jsonMapping);
   let primaryIdAttribute = "";
+  let clickZoom: any = null;
 
   useEffect(() => {
     const getAllData = async () => {
@@ -61,20 +65,37 @@ const App = (props: any) => {
     getAllData();
   }, [true]);
   return (
-    <div
-      id="carfup_HierarchyControl"
-      style={{
-        width:
-          jsonMapping.properties?.width ??
-          props.context.mode.allocatedWidth + "px",
-        height:
-          jsonMapping.properties?.height ??
-          props.context.mode.allocatedHeight + "px",
-      }}
-    >
-      <OrgChartComponent data={data} currentRecordId={recordId} />
+    <div>
+      <Button /*icon={<ZoomInRegular} />}*/ onClick={() => zoom("in")}>
+        Zoom in
+      </Button>
+      <Button /*icon={<ZoomOutRegular />} */ onClick={() => zoom("out")}>
+        Zoom out
+      </Button>
+
+      <div
+        id="carfup_HierarchyControl"
+        style={{
+          width:
+            jsonMapping.properties?.width ??
+            props.context.mode.allocatedWidth + "px",
+          height:
+            jsonMapping.properties?.height ??
+            props.context.mode.allocatedHeight + "px",
+        }}
+      >
+        <OrgChartComponent
+          data={data}
+          currentRecordId={recordId}
+          setZoom={(z: any) => (clickZoom = z)}
+        />
+      </div>
     </div>
   );
+
+  function zoom(zoom: string = "in") {
+    clickZoom(zoom);
+  }
 
   function renameKey(
     obj: any,
@@ -133,62 +154,19 @@ const App = (props: any) => {
     });
   }
 
-  function formatJson(jsonData: any, jsonMapping: Mapping) {
-    const targetJson: any = [];
-
-    jsonData.forEach((obj: any) => {
-      const propsTarget: any = {};
-
-      renameKey(obj, isLookup(jsonMapping.recordIdField), "id", propsTarget);
-      renameKey(
-        obj,
-        isLookup(jsonMapping.parentField),
-        "parentId",
-        propsTarget
-      );
-      renameKey(obj, isLookup(jsonMapping.mapping.name), "name", propsTarget);
-      renameKey(
-        obj,
-        isLookup(jsonMapping.mapping.attribute1!),
-        "attribute1",
-        propsTarget
-      );
-      renameKey(
-        obj,
-        isLookup(jsonMapping.mapping.attribute2!),
-        "attribute2",
-        propsTarget
-      );
-      renameKey(
-        obj,
-        isLookup(jsonMapping.mapping.attribute3!),
-        "attribute3",
-        propsTarget
-      );
-      //HIHIH
-      targetJson.push(propsTarget);
-    });
-
-    return targetJson;
+  function formatJson(jsonData: any, jsonMapping: Mapping): any {
+    return DataFormatter.formatJson(
+      jsonData,
+      fields,
+      jsonMapping,
+      renameKey,
+      isLookup
+    );
   }
 
   function isLookup(field: string) {
     const f = fields.find((f: any) => f.name === field)?.type;
     return f === "lookup" ? `_${field}_value` : field;
-  }
-
-  function extractField(jsonMapping: Mapping) {
-    const fields: fieldDefinition[] = [];
-    fields.push({ name: jsonMapping.recordIdField });
-    fields.push({ name: jsonMapping.parentField });
-    fields.push({ name: jsonMapping.mapping.name });
-    if (jsonMapping.mapping.attribute1)
-      fields.push({ name: jsonMapping.mapping.attribute1 });
-    if (jsonMapping.mapping.attribute2)
-      fields.push({ name: jsonMapping.mapping.attribute2 });
-    if (jsonMapping.mapping.attribute3)
-      fields.push({ name: jsonMapping.mapping.attribute3 });
-    return fields;
   }
 
   function returnType(attr: any) {
