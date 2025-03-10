@@ -64,7 +64,6 @@ const OrgChartComponent = (props: any) => {
         .compactMarginBetween((_d) => 50)
         .compactMarginPair((_d) => 80)
         .setActiveNodeCentered(true)
-
         .nodeContent(function (d: any, i, arr, state) {
           const backgroundColor =
             d.data.id == props.mapping.recordIdValue ? "#FFFFFF" : "#FFFFFF";

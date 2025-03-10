@@ -54,6 +54,10 @@ export class DataFormatter {
       fields.push({ name: jsonMapping.mapping.attribute2 });
     if (jsonMapping.mapping.attribute3)
       fields.push({ name: jsonMapping.mapping.attribute3 });
+
+    if (jsonMapping.lookupOtherTable) {
+      fields.push({ name: jsonMapping.lookupOtherTable });
+    }
     return fields;
   }
 }

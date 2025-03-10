@@ -1,19 +1,22 @@
 import { useState, useEffect } from "react";
 import * as React from "react";
 import OrgChartComponent from "./OrgChartComponent";
-import { Mapping, fieldDefinition } from "../EntitiesDefinition";
+import { Mapping } from "../EntitiesDefinition";
 import { DataFormatter } from "../DataFormatter";
-import { Button, Divider, Input } from "@fluentui/react-components";
-//import { ZoomInRegular, ZoomOutRegular, SearchRegular } from "@fluentui/react-icons";
+import { Button, Input } from "@fluentui/react-components";
+import {
+  ZoomInRegular,
+  ZoomOutRegular,
+  SearchRegular,
+} from "@fluentui/react-icons";
 
 const App = (props: any) => {
   const [data, setData] = useState(null);
-
-  const contextInfo = props.context.mode.contextInfo;
-
   const jsonMapping: Mapping = JSON.parse(props.jsonMapping);
+  const contextInfo = props.context.mode.contextInfo;
   jsonMapping.recordIdValue = contextInfo.entityId;
   jsonMapping.entityName = contextInfo.entityTypeName;
+
   const fields = DataFormatter.extractFields(jsonMapping);
   let primaryIdAttribute = "";
   let clickZoom: any = null;
@@ -30,6 +33,8 @@ const App = (props: any) => {
       // retrive attributes details and formatting
       primaryIdAttribute = dataEM.PrimaryIdAttribute;
       getAttributeDetails(dataEM);
+
+      isExternalLookup(dataEM);
 
       const getTopParentData =
         await props.context.webAPI.retrieveMultipleRecords(
@@ -67,18 +72,23 @@ const App = (props: any) => {
   }, [true]);
   return (
     <div>
-      <Button /*icon={<ZoomInRegular} />}*/ onClick={() => zoom("in")}>
-        Zoom in
-      </Button>
-      <Button /*icon={<ZoomOutRegular />} */ onClick={() => zoom("out")}>
-        Zoom out
-      </Button>
-      <Input
-        /*contentAfter={<SearchRegular aria-label="Enter by voice" />}*/
-        placeholder="Search"
-        onChange={(e: any) => search(e.target.value)}
-      />
-
+      <div style={{ display: "flex", justifyContent: "flex-start" }}>
+        {jsonMapping.properties?.showZoom! && (
+          <div id="carfup_HierarchyControl_zoom">
+            <Button icon={<ZoomInRegular />} onClick={() => zoom("in")} />
+            &nbsp;
+            <Button icon={<ZoomOutRegular />} onClick={() => zoom("out")} />
+            &nbsp;
+          </div>
+        )}
+        {jsonMapping.properties?.showSearch && (
+          <Input
+            contentAfter={<SearchRegular />}
+            placeholder="Search"
+            onChange={(e: any) => search(e.target.value)}
+          />
+        )}
+      </div>
       <div
         id="carfup_HierarchyControl"
         style={{
@@ -209,6 +219,23 @@ const App = (props: any) => {
         break;
     }
     return result;
+  }
+
+  async function isExternalLookup(dataEM: any) {
+    if (jsonMapping.lookupOtherTable) {
+      const lookupField =
+        dataEM.Attributes._collection[jsonMapping.lookupOtherTable];
+      const lookupFieldValue = await props.context.webAPI.retrieveRecord(
+        jsonMapping.entityName,
+        jsonMapping.recordIdValue,
+        `?$select=_${jsonMapping.lookupOtherTable}_value`
+      );
+
+      jsonMapping.entityName = lookupField.EntityLogicalName;
+      jsonMapping.recordIdField = lookupField.LogicalName;
+      jsonMapping.recordIdValue =
+        lookupFieldValue[jsonMapping.lookupOtherTable];
+    }
   }
 };
 
