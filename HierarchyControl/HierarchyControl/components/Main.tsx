@@ -18,32 +18,28 @@ const App = (props: any) => {
   jsonMapping.entityName = contextInfo.entityTypeName;
 
   const fields = DataFormatter.extractFields(jsonMapping);
-  let primaryIdAttribute = "";
   let clickZoom: any = null;
   let searchNode: any = null;
 
   useEffect(() => {
     const getAllData = async () => {
-      jsonMapping.recordIdValue = "12234";
       // Get attributes details
-      const dataEM = await props.context.utils.getEntityMetadata(
+      let dataEM = await props.context.utils.getEntityMetadata(
         jsonMapping.entityName,
         fields.map((u) => u.name)
       );
 
-      // retrive attributes details and formatting
-      primaryIdAttribute = dataEM.PrimaryIdAttribute;
-      getAttributeDetails(dataEM);
-
       // Check if PCF is configured to retrieve data from a lookup record instead of the main record
-      await isExternalLookup(dataEM, jsonMapping);
+      // in case of external, get the EntityMetadata of the lookup record
+      dataEM = await isExternalLookup(dataEM, jsonMapping);
+
+      // retrive attributes details and formatting
+      getAttributeDetails(dataEM);
 
       const getTopParentData =
         await props.context.webAPI.retrieveMultipleRecords(
           jsonMapping.entityName,
-          `?$filter=
-            Microsoft.Dynamics.CRM.Above(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${jsonMapping.recordIdValue}') and _${jsonMapping.parentField}_value eq null
-          `
+          `?$filter=Microsoft.Dynamics.CRM.Above(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${jsonMapping.recordIdValue}') and _${jsonMapping.parentField}_value eq null`
         );
 
       // Get to parent to retrieve all records below it
@@ -53,15 +49,14 @@ const App = (props: any) => {
           : getTopParentData.entities[0][jsonMapping.recordIdField];
 
       // get all records below the top parent
+      const concatFields = fields
+        .filter((f) => f.webapiName)
+        .map((f) => f.webapiName)
+        .join(",");
       const getChildrenData =
         await props.context.webAPI.retrieveMultipleRecords(
           jsonMapping.entityName,
-          `?$filter=
-          Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${
-            jsonMapping.recordIdField
-          }',PropertyValue='${getTopParentDataId}') 
-          &$select=${fields.map((f) => f.webapiName).join(",")}
-        `
+          `?$filter=Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${getTopParentDataId}')&$select=${concatFields}`
         );
 
       // format the data
@@ -171,9 +166,10 @@ const App = (props: any) => {
     em.Attributes.forEach((attr: any) => {
       const index = fields.findIndex((f: any) => f.name === attr.LogicalName);
       fields[index].webapiName =
-        attr.AttributeTypeName == "lookup" ||
-        attr.AttributeTypeName == "owner" ||
-        attr.AttributeTypeName == "customer"
+        em.PrimaryAttributeId != attr.LogicalName &&
+        (attr.AttributeTypeName == "lookup" ||
+          attr.AttributeTypeName == "owner" ||
+          attr.AttributeTypeName == "customer")
           ? `_${attr.LogicalName}_value`
           : attr.LogicalName;
       fields[index].type = returnType(attr);
@@ -229,13 +225,14 @@ const App = (props: any) => {
   // Check if the PCF is configured to retrieve data from a lookup record instead of the main record
   async function isExternalLookup(dataEM: any, jsonMapping: Mapping) {
     const contextInfo = props.context.mode.contextInfo;
-
+    let lookupTableDetails = dataEM;
     if (jsonMapping.lookupOtherTable) {
       const lookupField =
         dataEM.Attributes._collection[jsonMapping.lookupOtherTable];
 
-      const lookupTableDetails = await props.context.utils.getEntityMetadata(
-        lookupField.EntityLogicalName
+      lookupTableDetails = await props.context.utils.getEntityMetadata(
+        lookupField.Targets[0],
+        fields.map((u) => u.name)
       );
       const lookupFieldValue = await props.context.webAPI.retrieveRecord(
         jsonMapping.entityName,
@@ -243,7 +240,7 @@ const App = (props: any) => {
         `?$select=_${jsonMapping.lookupOtherTable}_value`
       );
 
-      jsonMapping.entityName = lookupField.EntityLogicalName;
+      jsonMapping.entityName = lookupTableDetails.LogicalName;
       jsonMapping.recordIdField = lookupTableDetails.PrimaryIdAttribute;
       jsonMapping.recordIdValue =
         lookupFieldValue[`_${jsonMapping.lookupOtherTable}_value`];
@@ -251,7 +248,7 @@ const App = (props: any) => {
       jsonMapping.recordIdValue = contextInfo.entityId;
     }
 
-    return jsonMapping;
+    return lookupTableDetails;
   }
 };
 
