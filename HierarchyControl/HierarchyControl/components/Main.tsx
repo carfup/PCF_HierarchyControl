@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import * as React from "react";
 import OrgChartComponent from "./OrgChartComponent";
-import { Mapping } from "../EntitiesDefinition";
-import { DataFormatter } from "../DataFormatter";
+import { fieldDefinition, Mapping } from "../EntitiesDefinition";
 import { Button, Input } from "@fluentui/react-components";
 import {
   ZoomInRegular,
@@ -13,11 +12,11 @@ import {
 const App = (props: any) => {
   const [data, setData] = useState(null);
   const [jsonMappingControl, setJsonMappingControl] = useState(null);
-  let jsonMapping = JSON.parse(props.jsonMapping);
+  const jsonMapping = JSON.parse(props.jsonMapping);
   const contextInfo = props.context.mode.contextInfo;
   jsonMapping.entityName = contextInfo.entityTypeName;
 
-  const fields = DataFormatter.extractFields(jsonMapping);
+  const fields: fieldDefinition[] = extractFields(jsonMapping);
   let clickZoom: any = null;
   let searchNode: any = null;
 
@@ -50,8 +49,8 @@ const App = (props: any) => {
 
       // get all records below the top parent
       const concatFields = fields
-        .filter((f) => f.webapiName)
-        .map((f) => f.webapiName)
+        .filter((f: fieldDefinition) => f.webapiName)
+        .map((f: fieldDefinition) => f.webapiName)
         .join(",");
       const getChildrenData =
         await props.context.webAPI.retrieveMultipleRecords(
@@ -60,7 +59,11 @@ const App = (props: any) => {
         );
 
       // format the data
-      const jsonData = formatJson(getChildrenData.entities, jsonMapping);
+      const jsonData: any = formatJson(
+        getChildrenData.entities,
+        fields,
+        jsonMapping
+      );
 
       // Update the mapping passed to the OrgChartComponent
       setJsonMappingControl(jsonMapping);
@@ -73,7 +76,7 @@ const App = (props: any) => {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "flex-start" }}>
-        {jsonMapping.properties?.showZoom! && (
+        {jsonMapping.properties?.showZoom && (
           <div id="carfup_HierarchyControl_zoom">
             <Button icon={<ZoomInRegular />} onClick={() => zoom("in")} />
             &nbsp;
@@ -134,7 +137,7 @@ const App = (props: any) => {
         const type: string | undefined = fields.find(
           (f: any) => f.webapiName === oldKey
         )?.type;
-        if (["lookup", "datetime", "picklist"].includes(type!)) {
+        if (type && ["lookup", "datetime", "picklist"].includes(type)) {
           key = `${oldKey}@OData.Community.Display.V1.FormattedValue`;
         }
 
@@ -177,14 +180,58 @@ const App = (props: any) => {
     });
   }
 
-  function formatJson(jsonData: any, jsonMapping: Mapping): any {
-    return DataFormatter.formatJson(
-      jsonData,
-      fields,
-      jsonMapping,
-      renameKey,
-      isLookup
-    );
+  function formatJson(jsonData: any, fields: any, mapping: any) {
+    const targetJson: any[] = [];
+    jsonData.forEach((obj: any) => {
+      const propsTarget: any = {};
+      renameKey(obj, isLookup(mapping.recordIdField), "id", propsTarget);
+      renameKey(obj, isLookup(mapping.parentField), "parentId", propsTarget);
+      renameKey(obj, isLookup(mapping.mapping.name), "name", propsTarget);
+      if (mapping.mapping.attribute1) {
+        renameKey(
+          obj,
+          isLookup(mapping.mapping.attribute1),
+          "attribute1",
+          propsTarget
+        );
+      }
+      if (mapping.mapping.attribute2) {
+        renameKey(
+          obj,
+          isLookup(mapping.mapping.attribute2),
+          "attribute2",
+          propsTarget
+        );
+      }
+      if (mapping.mapping.attribute3) {
+        renameKey(
+          obj,
+          isLookup(mapping.mapping.attribute3),
+          "attribute3",
+          propsTarget
+        );
+      }
+      targetJson.push(propsTarget);
+    });
+    return targetJson;
+  }
+
+  function extractFields(jsonMapping: Mapping): fieldDefinition[] {
+    const fields: fieldDefinition[] = [];
+    fields.push({ name: jsonMapping.recordIdField });
+    fields.push({ name: jsonMapping.parentField });
+    fields.push({ name: jsonMapping.mapping.name });
+    if (jsonMapping.mapping.attribute1)
+      fields.push({ name: jsonMapping.mapping.attribute1 });
+    if (jsonMapping.mapping.attribute2)
+      fields.push({ name: jsonMapping.mapping.attribute2 });
+    if (jsonMapping.mapping.attribute3)
+      fields.push({ name: jsonMapping.mapping.attribute3 });
+
+    if (jsonMapping.lookupOtherTable) {
+      fields.push({ name: jsonMapping.lookupOtherTable });
+    }
+    return fields;
   }
 
   function isLookup(field: string) {
@@ -232,7 +279,7 @@ const App = (props: any) => {
 
       lookupTableDetails = await props.context.utils.getEntityMetadata(
         lookupField.Targets[0],
-        fields.map((u) => u.name)
+        fields.map((u: any) => u.name)
       );
       const lookupFieldValue = await props.context.webAPI.retrieveRecord(
         jsonMapping.entityName,

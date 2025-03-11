@@ -1,0 +1,2 @@
+cd C:\Projets\CRM\PCF\PCF_HierarchyControlcd hi
+msbuild /t:build /restore /p:configuration=Release
