@@ -7,6 +7,7 @@ import {
   ZoomInRegular,
   ZoomOutRegular,
   SearchRegular,
+  PageFitRegular,
 } from "@fluentui/react-icons";
 
 const App = (props: any) => {
@@ -25,7 +26,7 @@ const App = (props: any) => {
       // Get attributes details
       let dataEM = await props.context.utils.getEntityMetadata(
         jsonMapping.entityName,
-        fields.map((u) => u.name)
+        fields.map((u: fieldDefinition) => u.name)
       );
 
       // Check if PCF is configured to retrieve data from a lookup record instead of the main record
@@ -78,9 +79,23 @@ const App = (props: any) => {
       <div style={{ display: "flex", justifyContent: "flex-start" }}>
         {jsonMapping.properties?.showZoom && (
           <div id="carfup_HierarchyControl_zoom">
-            <Button icon={<ZoomInRegular />} onClick={() => zoom("in")} />
+            <Button
+              icon={<ZoomInRegular />}
+              onClick={() => zoom("in")}
+              title="Zoom In"
+            />
             &nbsp;
-            <Button icon={<ZoomOutRegular />} onClick={() => zoom("out")} />
+            <Button
+              icon={<ZoomOutRegular />}
+              onClick={() => zoom("out")}
+              title="Zoom Out"
+            />
+            &nbsp;
+            <Button
+              icon={<PageFitRegular />}
+              onClick={() => zoom("fit")}
+              title="Fit to screen"
+            />
             &nbsp;
           </div>
         )}

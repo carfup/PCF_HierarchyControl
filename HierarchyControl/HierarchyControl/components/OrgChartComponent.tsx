@@ -11,7 +11,13 @@ const OrgChartComponent = (props: any) => {
   const chartRef = useRef(new OrgChart());
 
   function zoom(zoom: string = "in") {
-    zoom === "in" ? chartRef.current.zoomIn() : chartRef.current.zoomOut();
+    if (zoom === "in") {
+      chartRef.current.zoomIn();
+    } else if (zoom === "out") {
+      chartRef.current.zoomOut();
+    } else {
+      chartRef.current.fit();
+    }
   }
 
   function search(value: string) {
