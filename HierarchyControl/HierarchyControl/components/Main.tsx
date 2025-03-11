@@ -12,9 +12,9 @@ import {
 
 const App = (props: any) => {
   const [data, setData] = useState(null);
-  const jsonMapping: Mapping = JSON.parse(props.jsonMapping);
+  const [jsonMappingControl, setJsonMappingControl] = useState(null);
+  let jsonMapping = JSON.parse(props.jsonMapping);
   const contextInfo = props.context.mode.contextInfo;
-  jsonMapping.recordIdValue = contextInfo.entityId;
   jsonMapping.entityName = contextInfo.entityTypeName;
 
   const fields = DataFormatter.extractFields(jsonMapping);
@@ -24,6 +24,7 @@ const App = (props: any) => {
 
   useEffect(() => {
     const getAllData = async () => {
+      jsonMapping.recordIdValue = "12234";
       // Get attributes details
       const dataEM = await props.context.utils.getEntityMetadata(
         jsonMapping.entityName,
@@ -34,7 +35,8 @@ const App = (props: any) => {
       primaryIdAttribute = dataEM.PrimaryIdAttribute;
       getAttributeDetails(dataEM);
 
-      isExternalLookup(dataEM);
+      // Check if PCF is configured to retrieve data from a lookup record instead of the main record
+      await isExternalLookup(dataEM, jsonMapping);
 
       const getTopParentData =
         await props.context.webAPI.retrieveMultipleRecords(
@@ -44,6 +46,7 @@ const App = (props: any) => {
           `
         );
 
+      // Get to parent to retrieve all records below it
       const getTopParentDataId =
         getTopParentData.entities.length == 0
           ? jsonMapping.recordIdValue
@@ -64,6 +67,8 @@ const App = (props: any) => {
       // format the data
       const jsonData = formatJson(getChildrenData.entities, jsonMapping);
 
+      // Update the mapping passed to the OrgChartComponent
+      setJsonMappingControl(jsonMapping);
       // set the data
       setData(jsonData);
     };
@@ -102,7 +107,7 @@ const App = (props: any) => {
       >
         <OrgChartComponent
           data={data}
-          mapping={jsonMapping}
+          mapping={jsonMappingControl}
           setZoom={(z: any) => (clickZoom = z)}
           setSearch={(s: any) => (searchNode = s)}
           context={props.context}
@@ -221,21 +226,32 @@ const App = (props: any) => {
     return result;
   }
 
-  async function isExternalLookup(dataEM: any) {
+  // Check if the PCF is configured to retrieve data from a lookup record instead of the main record
+  async function isExternalLookup(dataEM: any, jsonMapping: Mapping) {
+    const contextInfo = props.context.mode.contextInfo;
+
     if (jsonMapping.lookupOtherTable) {
       const lookupField =
         dataEM.Attributes._collection[jsonMapping.lookupOtherTable];
+
+      const lookupTableDetails = await props.context.utils.getEntityMetadata(
+        lookupField.EntityLogicalName
+      );
       const lookupFieldValue = await props.context.webAPI.retrieveRecord(
         jsonMapping.entityName,
-        jsonMapping.recordIdValue,
+        contextInfo.entityId,
         `?$select=_${jsonMapping.lookupOtherTable}_value`
       );
 
       jsonMapping.entityName = lookupField.EntityLogicalName;
-      jsonMapping.recordIdField = lookupField.LogicalName;
+      jsonMapping.recordIdField = lookupTableDetails.PrimaryIdAttribute;
       jsonMapping.recordIdValue =
-        lookupFieldValue[jsonMapping.lookupOtherTable];
+        lookupFieldValue[`_${jsonMapping.lookupOtherTable}_value`];
+    } else {
+      jsonMapping.recordIdValue = contextInfo.entityId;
     }
+
+    return jsonMapping;
   }
 };
 
