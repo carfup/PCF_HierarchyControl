@@ -1,9 +1,12 @@
 export interface Mapping {
+  entityName: string;
   parentField: string;
   recordIdField: string;
+  lookupOtherTable?: string;
   mapping: attributesMapping;
   properties?: propertiesMapping;
   isCurrentRecord: boolean;
+  recordIdValue?: string;
 }
 
 export interface attributesMapping {
@@ -16,6 +19,8 @@ export interface attributesMapping {
 export interface propertiesMapping {
   height?: number;
   width?: number;
+  showZoom?: boolean;
+  showSearch?: boolean;
 }
 
 export interface fieldDefinition {
