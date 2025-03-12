@@ -46,7 +46,7 @@ const OrgChartComponent = (props: any) => {
   function addListener() {
     const data: any = chartRef.current.data() as any;
 
-    // Mark all previously expanded nodes for collapse
+    // attach the click listener to call the navigate function and not trigger it on load
     data.forEach((d: any) =>
       document
         .getElementById(`navi_${d.id}`)!
@@ -153,6 +153,7 @@ const OrgChartComponent = (props: any) => {
     </div>
   );
 
+  // Define the cell Height based on the available properties
   function getCellHeight(d: any) {
     let cellHeight = 90;
     if (d.data.attribute1 != null) {
@@ -167,6 +168,7 @@ const OrgChartComponent = (props: any) => {
     return cellHeight;
   }
 
+  // Standard navigate functions
   function navigate(id: string) {
     var pageInput = {
       pageType: "entityrecord",
@@ -184,6 +186,7 @@ const OrgChartComponent = (props: any) => {
     );
   }
 
+  // Get the icon based on the type
   function getIcon(icon: string) {
     let result = "";
     switch (icon) {
