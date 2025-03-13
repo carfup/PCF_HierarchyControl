@@ -57,3 +57,5 @@ Each data type will have it's own icon next to the value.
 
 - Configuration sample on the form level :
 ![](https://carfupstorage.blob.core.windows.net/sharex/2025_02_14_13-28-05_Rambox.png)
+
+Reference of the org chart library used here : https://github.com/bumbeishvili/org-chart
