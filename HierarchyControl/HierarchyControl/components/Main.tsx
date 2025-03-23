@@ -124,6 +124,11 @@ const App = (props: any) => {
           setZoom={(z: any) => (clickZoom = z)}
           setSearch={(s: any) => (searchNode = s)}
           context={props.context}
+          size={{
+            width: jsonMapping.properties?.width ??
+            props.context.mode.allocatedWidth,
+            height: jsonMapping.properties?.height ??
+            props.context.mode.allocatedHeight}}
         />
       </div>
     </div>

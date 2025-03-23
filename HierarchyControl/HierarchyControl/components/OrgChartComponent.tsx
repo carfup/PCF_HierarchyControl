@@ -60,10 +60,11 @@ const OrgChartComponent = (props: any) => {
   // We need to manipulate DOM
   useEffect(() => {
     if (props.data && d3Container.current) {
-      chartRef.current
+      var content = chartRef.current
         .container(d3Container.current)
         .data(props.data)
         .nodeWidth((_d) => 360)
+        
         .initialZoom(0.7)
         .nodeHeight((_d) => getCellHeight(_d)) //145
         .childrenMargin((_d) => 50)
@@ -142,6 +143,12 @@ const OrgChartComponent = (props: any) => {
         .expandAll()
         .setCentered(props.mapping.recordIdValue)
         .render();
+
+        if(props.size.width && props.size.width != -1)
+          content = content.svgWidth(props.size.width);
+
+        if(props.size.height && props.size.height != -1)
+          content = content.svgHeight(props.size.height);
 
       addListener();
     }
