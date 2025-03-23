@@ -9,6 +9,7 @@ import { useEffect, useRef } from "react";
 const OrgChartComponent = (props: any) => {
   const d3Container = useRef(null);
   const chartRef = useRef(new OrgChart());
+  let searchRecords : any = [];
 
   function zoom(zoom: string = "in") {
     if (zoom === "in") {
@@ -23,6 +24,7 @@ const OrgChartComponent = (props: any) => {
   function search(value: string) {
     // Clear previous higlighting
     chartRef.current.clearHighlighting();
+    searchRecords = [];
 
     // Get chart nodes
     const data: any = chartRef.current.data() as any;
@@ -35,6 +37,7 @@ const OrgChartComponent = (props: any) => {
       ) {
         // If matches, mark node as highlighted
         d._highlighted = true;
+        searchRecords.push({id : d.id, viewed : false});
       }
     });
 
@@ -54,8 +57,21 @@ const OrgChartComponent = (props: any) => {
     );
   }
 
+  function setSearchRecords() {
+    let rec = searchRecords.find((record : any) => !record.viewed);
+    if(rec) {
+      chartRef.current.setCentered(rec.id).render();
+      rec.viewed = true;
+    } else {
+      searchRecords.forEach((record : any) => {
+          record.viewed = false;
+      });
+    }
+  }
+
   props.setZoom(zoom);
   props.setSearch(search);
+  props.setSearchNext(setSearchRecords);
 
   // We need to manipulate DOM
   useEffect(() => {
@@ -141,14 +157,16 @@ const OrgChartComponent = (props: any) => {
                             `;
         })
         .expandAll()
-        .setCentered(props.mapping.recordIdValue)
-        .render();
+        
 
         if(props.size.width && props.size.width != -1)
           content = content.svgWidth(props.size.width);
 
         if(props.size.height && props.size.height != -1)
           content = content.svgHeight(props.size.height);
+
+        content = content.setCentered(props.mapping.recordIdValue)
+        .render();
 
       addListener();
     }

@@ -8,6 +8,7 @@ import {
   ZoomOutRegular,
   SearchRegular,
   PageFitRegular,
+  ArrowStepInFilled,
 } from "@fluentui/react-icons";
 
 const App = (props: any) => {
@@ -20,6 +21,7 @@ const App = (props: any) => {
   const fields: fieldDefinition[] = extractFields(jsonMapping);
   let clickZoom: any = null;
   let searchNode: any = null;
+  let searchNextNode : any = null;
 
   useEffect(() => {
     const getAllData = async () => {
@@ -100,12 +102,21 @@ const App = (props: any) => {
           </div>
         )}
         {jsonMapping.properties?.showSearch && (
+          <div id="carfup_HierarchyControl_search">
           <Input
             contentAfter={<SearchRegular />}
             placeholder="Search"
             onChange={(e: any) => search(e.target.value)}
           />
+          &nbsp;
+          <Button
+              icon={<ArrowStepInFilled />}
+              onClick={() => searchNext()}
+              title="Search Next Result"
+            />
+          </div>
         )}
+       
       </div>
       <div
         id="carfup_HierarchyControl"
@@ -123,6 +134,7 @@ const App = (props: any) => {
           mapping={jsonMappingControl}
           setZoom={(z: any) => (clickZoom = z)}
           setSearch={(s: any) => (searchNode = s)}
+          setSearchNext={(s: any) => (searchNextNode = s)}
           context={props.context}
           size={{
             width: jsonMapping.properties?.width ??
@@ -142,6 +154,9 @@ const App = (props: any) => {
     searchNode(value);
   }
 
+  function searchNext() {
+    searchNextNode();
+  }
   function renameKey(
     obj: any,
     oldKey: string,
