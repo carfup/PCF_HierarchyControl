@@ -28,4 +28,5 @@ export interface fieldDefinition {
   webapiName?: string;
   type?: string;
   displayName?: string;
+  statecode? : number;
 }
