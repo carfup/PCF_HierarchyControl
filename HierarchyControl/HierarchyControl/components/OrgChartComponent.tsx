@@ -66,6 +66,7 @@ const OrgChartComponent = (props: any) => {
       searchRecords.forEach((record : any) => {
           record.viewed = false;
       });
+      setSearchRecords();
     }
   }
 
@@ -87,74 +88,48 @@ const OrgChartComponent = (props: any) => {
         .compactMarginBetween((_d) => 50)
         .compactMarginPair((_d) => 80)
         .setActiveNodeCentered(true)
-        .nodeContent(function (d: any, i, arr, state) {
-          const backgroundColor =
-            d.data.id == props.mapping.recordIdValue ? "#FFFFFF" : "#FFFFFF";
-          const borderColor =
-            d.data.id == props.mapping.recordIdValue ? "#FF0000" : "#E4E2E9";
+        .nodeContent(function (d: any) {
+          const isActiveNode = d.data.id === props.mapping.recordIdValue;
+          const backgroundColor = "#FFFFFF";
+          const borderColor = isActiveNode ? "#FF0000" : "#E4E2E9";
           const textMainColor = "#08011E";
           const textColor = "#716E7B";
-          const [firstWord, secondWord] =
-            d.data.name.value != null ? d.data.name.value!.split(" ") : "";
-          const initials = [firstWord, secondWord]
-            .map((word) => {
-              if (word) return word[0];
+          const initials = (d.data.name.value || "")
+            .split(" ")
+            .map((word : any) => word?.[0]?.toUpperCase() || "")
+            .join("");
+        
+          const attributes = ["attribute1", "attribute2", "attribute3"]
+            .map(attr => {
+              const attribute = d.data[attr];
+              return attribute?.value
+                ? `<div style="display:flex;align-items:center" title="${attribute.displayName}">
+                     ${getIcon(attribute.type)}&nbsp;${attribute.value}
+                   </div>`
+                : "";
             })
-            .join("")
-            .toUpperCase();
-
-          const imageDiffVert = 25 + 2;
-
-          const attribute1 =
-            d.data.attribute1 != null && d.data.attribute1.value != null
-              ? `<div style="display:flex;align-items:center" title="${
-                  d.data.attribute1.displayName
-                }">${getIcon(d.data.attribute1.type)}&nbsp; ${d.data.attribute1
-                  .value!}</div>`
-              : "";
-
-          const attribute2 =
-            d.data.attribute2 != null && d.data.attribute2.value != null
-              ? `<div style="display:flex;align-items:center" title="${
-                  d.data.attribute2.displayName
-                }">${getIcon(d.data.attribute2.type)}&nbsp; ${d.data.attribute2
-                  .value!}</div>`
-              : "";
-
-          const attribute3 =
-            d.data.attribute3 != null && d.data.attribute3.value != null
-              ? `<div style="display:flex;align-items:center" title="${
-                  d.data.attribute3.displayName
-                }">${getIcon(d.data.attribute3.type)}&nbsp; ${d.data.attribute3
-                  .value!}</div>`
-              : "";
-
-          return ` 
-                <div style='width:${
-                  d.width
-                }px;height:${d.height}px;padding-top:${imageDiffVert - 2}px;padding-left:1px;padding-right:1px'>
-                        <div style="font-family: 'Inter', sans-serif;background-color:${backgroundColor};  margin-left:-1px;width:${d.width - 2}px;height:${d.height - imageDiffVert}px;border-radius:10px;border: 1px solid ${borderColor};">
-                            <div style="display:flex;justify-content:flex-end;margin-top:5px;margin-right:8px;color:${textColor}"><span id="navi_${d.data.id}">${getIcon("link")}</span></div>
-                            <div style="background-color:${backgroundColor};margin-top:${-imageDiffVert - 20}px;margin-left:${15}px;border-radius:100px;width:50px;height:50px;" ></div>
-                            <div style="margin-top:${
-                              -imageDiffVert - 20
-                            }px;">   <span style="display: inline-block;background-color: ${getRandomColor()};color: #fff;border-radius: 50%;font-size: 18px;line-height: 40px;width: 40px;height: 40px;text-align: center;margin-left: 20px;font-family:'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;font-weight:600;">${initials}</span></div>
-                            <div style="font-size:20px;color:${textMainColor};margin-left:20px;margin-top:10px;"> 
-                              ${
-                                d.data.name.value != null
-                                  ? d.data.name.value
-                                  : ""
-                              } 
-                            </div>
-                            <div style="color:${textColor};margin-left:20px;margin-top:3px;font-size:12px;"> 
-                              ${attribute1}
-                              ${attribute2}
-                              ${attribute3}
-                            </div>
-
-                        </div>
-                    </div>
-                            `;
+            .join("");
+        
+          return `
+            <div style='width:${d.width}px;height:${d.height}px;padding-top:27px;padding-left:1px;padding-right:1px'>
+              <div style="font-family: 'Inter', sans-serif;background-color:${backgroundColor};margin-left:-1px;width:${d.width - 2}px;height:${d.height - 27}px;border-radius:10px;border: 1px solid ${borderColor};">
+                <div style="display:flex;justify-content:flex-end;margin-top:5px;margin-right:8px;color:${textColor}">
+                  <span id="navi_${d.data.id}">${getIcon("link")}</span>
+                </div>
+                <div style="background-color:${backgroundColor};margin-top:-45px;margin-left:15px;border-radius:100px;width:50px;height:50px;"></div>
+                <div style="margin-top:-45px;">
+                  <span style="display: inline-block;background-color: ${getRandomColor()};color: #fff;border-radius: 50%;font-size: 18px;line-height: 40px;width: 40px;height: 40px;text-align: center;margin-left: 20px;font-family:'Segoe UI', sans-serif;font-weight:600;">
+                    ${initials}
+                  </span>
+                </div>
+                <div style="font-size:20px;color:${textMainColor};margin-left:20px;margin-top:10px;">
+                  ${d.data.name.value || ""}
+                </div>
+                <div style="color:${textColor};margin-left:20px;margin-top:3px;font-size:12px;">
+                  ${attributes}
+                </div>
+              </div>
+            </div>`;
         })
         .expandAll()
         

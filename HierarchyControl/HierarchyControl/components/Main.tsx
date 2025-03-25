@@ -14,6 +14,7 @@ import {
 const App = (props: any) => {
   const [data, setData] = useState(null);
   const [jsonMappingControl, setJsonMappingControl] = useState(null);
+  const [searchOnGoing, setSearchOnGoing] = useState(true);
   const jsonMapping = JSON.parse(props.jsonMapping);
   const contextInfo = props.context.mode.contextInfo;
   jsonMapping.entityName = contextInfo.entityTypeName;
@@ -102,19 +103,19 @@ const App = (props: any) => {
           </div>
         )}
         {jsonMapping.properties?.showSearch && (
-          <div id="carfup_HierarchyControl_search">
           <Input
             contentAfter={<SearchRegular />}
             placeholder="Search"
             onChange={(e: any) => search(e.target.value)}
           />
-          &nbsp;
+        )}&nbsp;
+          {jsonMapping.properties?.showSearch && (
           <Button
               icon={<ArrowStepInFilled />}
               onClick={() => searchNext()}
               title="Search Next Result"
+              disabled={searchOnGoing}
             />
-          </div>
         )}
        
       </div>
@@ -152,6 +153,7 @@ const App = (props: any) => {
 
   function search(value: string) {
     searchNode(value);
+    setSearchOnGoing(value == "" || value == null);
   }
 
   function searchNext() {
