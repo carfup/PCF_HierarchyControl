@@ -121,7 +121,7 @@ const OrgChartComponent = (props: any) => {
                         <div style="font-family: 'Inter', sans-serif;background-color:${backgroundColor};  margin-left:-1px;width:${d.width - 2}px;height:${d.height - imageDiffVert}px;border-radius:10px;border: 1px solid ${borderColor};">
                             <div style="display:flex;justify-content:flex-end;margin-top:5px;margin-right:8px;color:${textColor}">
                               <span id="navi_${d.data.id}">${getIcon("link")}</span> &nbsp;
-                              <span title="${d.data.name.statecode == 0 ? "Active" : "Inactive"}" style="height: 16px;width: 16px;background-color: ${statusColor};border-radius: 50%; display: inline-block;"></span>
+                              <span title="${d.data.name.statecode == 0 ? "Active" : "Inactive"}" style="height: 15px;width: 15px;background-color: ${statusColor};border-radius: 50%; display: inline-block;"></span>
                             </div>
                             <div style="background-color:${backgroundColor};margin-top:${-imageDiffVert - 20}px;margin-left:${15}px;border-radius:100px;width:50px;height:50px;" ></div>
                             <div style="margin-top:${
