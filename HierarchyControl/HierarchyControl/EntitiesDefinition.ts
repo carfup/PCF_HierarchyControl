@@ -1,11 +1,11 @@
 export interface Mapping {
-  entityName: string;
+  entityName?: string;
   parentField: string;
   recordIdField: string;
   lookupOtherTable?: string;
-  mapping: attributesMapping;
+  mapping: Array<string>;
   properties?: propertiesMapping;
-  isCurrentRecord: boolean;
+  isCurrentRecord?: boolean;
   recordIdValue?: string;
 }
 
