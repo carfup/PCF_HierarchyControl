@@ -58,7 +58,7 @@ const OrgChartComponent = (props: any) => {
   }
 
   function setSearchRecords() {
-    let rec = searchRecords.find((record : any) => !record.viewed);
+    const rec = searchRecords.find((record : any) => !record.viewed);
     if(rec) {
       chartRef.current.setCentered(rec.id).render();
       rec.viewed = true;
@@ -82,8 +82,8 @@ const OrgChartComponent = (props: any) => {
         .data(props.data)
         .nodeWidth((_d) => 360)
         
-        .initialZoom(0.7)
-        .nodeHeight((_d) => getCellHeight(_d)) //145
+        .initialZoom(0.8)
+        .nodeHeight((_d) =>150 ) //145
         .childrenMargin((_d) => 50)
         .compactMarginBetween((_d) => 50)
         .compactMarginPair((_d) => 80)
@@ -155,23 +155,6 @@ const OrgChartComponent = (props: any) => {
     </div>
   );
 
-  // Define the cell Height based on the available properties
-  function getCellHeight(d: any) {
-    let cellHeight = 90;
-
-    const nbAttributes = d.data.attributes.length;
-
-    if (nbAttributes >= 1) {
-      cellHeight += 20;
-    }
-    if (nbAttributes >= 2) {
-      cellHeight += 20;
-    }
-    if (nbAttributes >= 3) {
-      cellHeight += 20;
-    }
-    return cellHeight;
-  }
 
   // Standard navigate functions
   function navigate(id: string) {

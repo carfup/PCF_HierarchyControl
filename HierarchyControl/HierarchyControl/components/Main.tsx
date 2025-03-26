@@ -3,7 +3,7 @@ import * as React from "react";
 import OrgChartComponent from "./OrgChartComponent";
 import { fieldDefinition, Mapping } from "../EntitiesDefinition";
 import { Button, Input } from "@fluentui/react-components";
-import {ZoomInRegular,ZoomOutRegular,SearchRegular,PageFitRegular,ArrowStepInFilled} from "@fluentui/react-icons";
+import {ZoomInRegular,ZoomOutRegular,SearchRegular,PageFitRegular,ArrowNextRegular} from "@fluentui/react-icons";
 
 const App = (props: any) => {
   const [data, setData] = useState(null);
@@ -11,6 +11,10 @@ const App = (props: any) => {
   const [searchOnGoing, setSearchOnGoing] = useState(true);
 
   const jsonMapping = JSON.parse(props.jsonMapping);
+
+  // Check if the JSON input is valid
+  jsonInputCheck();
+
   const contextInfo = props.context.mode.contextInfo;
   jsonMapping.entityName = contextInfo.entityTypeName;
 
@@ -102,7 +106,7 @@ const App = (props: any) => {
         )}&nbsp;
           {jsonMapping.properties?.showSearch && (
           <Button
-              icon={<ArrowStepInFilled />}
+              icon={<ArrowNextRegular />}
               onClick={() => searchNext()}
               title="Search Next Result"
               disabled={searchOnGoing}
@@ -324,6 +328,11 @@ const App = (props: any) => {
     }
 
     return lookupTableDetails;
+  }
+
+  function jsonInputCheck(){
+    if(jsonMapping.mapping.attribute1)
+      alert("Hierarchy control PCF : \nPlease make sure that you updated the JSON schema of the Hierarchy control to properly works.\n\nPlease go to https://github.com/carfup/PCF_HierarchyControl to have the new JSON schema.")
   }
 };
 

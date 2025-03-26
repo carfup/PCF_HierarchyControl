@@ -5,7 +5,9 @@ You might be aware that the standard control showing the Hierarchy will be remov
 So I've decided to resolve the issue by creating it as a PCF control.
 Sample implementation with the account table :
 
-![](https://carfupstorage.blob.core.windows.net/sharex/2025_03_12_10-25-16_msedge.png)
+![](https://carfupstorage.blob.core.windows.net/sharex/2025_03_26_23-11-25_msedge.gif)
+
+⚠️ Starting at version 1.2.1, the JSON schema changed in order to support more than 3 attributes, make sure you update it along with the solution.
 
 Here are the steps to configure and use the control :
 
@@ -28,15 +30,10 @@ JSON Details : (sample with the account table)
 	"recordIdField" : "accountid",      REQUIRED - Primary Field of the Account table
 	"lookupOtherTable" : "mylookupfieldid" OPTIONAL - Allow you to display the hierarchy from a lookup perspective (the base will be the lookup record)
 						To properly configure it, you need to align the "parentField" and "recordIdField" with the lookup table definition
-	"mapping" : {
-      "name" : "name",                REQUIRED - Primary name displayed in the card
-      "attribute1" : "telephone1",    OPTIONAL - First attribute displayed in the card
-      "attribute2" : "websiteurl",    OPTIONAL - Second attribute displayed in the card
-      "attribute3" : "address1_line1" OPTIONAL - Thrid attribute displayed in the card
-    },
+	"mapping" : ["name","telephone1","websiteurl", "address1_line1"], REQUIRED - List of attributes to display, first one will be the node title, others will be displayed in order
 	"properties" : {
-		"height": 450,    OPTIONAL - Force the Height in px (By default use the height available)
-		"width": 1230,     OPTIONAL - Force the Width in px (By default use the full width available).
+		"height": 500,    OPTIONAL - Force the Height in px (By default use the height available)
+		"width": 1200,     OPTIONAL - Force the Width in px (By default use the full width available).
 		"showZoom": true,     OPTIONAL - Display the zoom in, zoom out, fit to screen buttons (Default value : false)
 		"showSearch": true     OPTIONAL - Display a search bar to find a node in the hierarchy (Default value : false)
 	}
@@ -56,6 +53,6 @@ Each data type will have it's own icon next to the value.
 - Keep a tab with one column in order to have to most of the space
 
 - Configuration sample on the form level :
-![](https://carfupstorage.blob.core.windows.net/sharex/2025_02_14_13-28-05_Rambox.png)
+![](https://carfupstorage.blob.core.windows.net/sharex/2025_03_26_21-59-31_msedge.png)
 
 Reference of the org chart library used here : https://github.com/bumbeishvili/org-chart
