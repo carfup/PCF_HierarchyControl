@@ -7,7 +7,7 @@ Sample implementation with the account table :
 
 ![](https://carfupstorage.blob.core.windows.net/sharex/2025_03_26_23-11-25_msedge.gif)
 
-⚠️ Starting at version 1.2.1, the JSON schema changed in order to support more than 3 attributes, make sure you update it along with the solution.
+⚠️ Starting at version 1.2.0, the JSON schema changed in order to support more than 3 attributes, make sure you update it along with the solution.
 
 Here are the steps to configure and use the control :
 
