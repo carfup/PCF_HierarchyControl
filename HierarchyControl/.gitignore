@@ -3,7 +3,7 @@
 # dependencies
 /node_modules
 
-!node_modules/d3-org-chart/src/d3-org-chart.js
+!/node_modules/d3-org-chart/src/d3-org-chart.js
 
 # generated directory
 **/generated
