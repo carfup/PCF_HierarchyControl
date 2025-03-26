@@ -98,12 +98,11 @@ const OrgChartComponent = (props: any) => {
           const textColor = "#716E7B";
           const initials = (d.data.name.value || "")
             .split(" ")
+            .slice(0, 2)
             .map((word : any) => word?.[0]?.toUpperCase() || "")
             .join("");
         
-          const attributes = ["attribute1", "attribute2", "attribute3"]
-            .map(attr => {
-              const attribute = d.data[attr];
+          const attributes = d.data.attributes.map((attribute : any) => {
               return attribute?.value
                 ? `<div style="display:flex;align-items:center" title="${attribute.displayName}">
                      ${getIcon(attribute.type)}&nbsp;${attribute.value}
@@ -125,11 +124,10 @@ const OrgChartComponent = (props: any) => {
                     ${initials}
                   </span>
                 </div>
-                <div style="font-size:20px;color:${textMainColor};margin-left:20px;margin-top:5px;">
+                <div style="font-size:20px;color:${textMainColor};margin-left:20px;margin-top:5px;width:320px;overflow:hidden;height:23px;">
                   ${d.data.name.value || ""}
                 </div>
                 <div style="color:${textColor};margin-left:20px;margin-top:3px;font-size:12px;overflow:scroll;height: 82px;">
-                  ${attributes}
                   ${attributes}
                 </div>
               </div>
@@ -160,13 +158,16 @@ const OrgChartComponent = (props: any) => {
   // Define the cell Height based on the available properties
   function getCellHeight(d: any) {
     let cellHeight = 90;
-    if (d.data.attribute1 != null) {
+
+    const nbAttributes = d.data.attributes.length;
+
+    if (nbAttributes >= 1) {
       cellHeight += 20;
     }
-    if (d.data.attribute2 != null) {
+    if (nbAttributes >= 2) {
       cellHeight += 20;
     }
-    if (d.data.attribute3 != null) {
+    if (nbAttributes >= 3) {
       cellHeight += 20;
     }
     return cellHeight;
