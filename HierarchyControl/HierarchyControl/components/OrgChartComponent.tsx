@@ -9,6 +9,7 @@ import { useEffect, useRef } from "react";
 const OrgChartComponent = (props: any) => {
   const d3Container = useRef(null);
   const chartRef = useRef(new OrgChart());
+  let searchRecords : any = [];
 
   function zoom(zoom: string = "in") {
     if (zoom === "in") {
@@ -23,6 +24,7 @@ const OrgChartComponent = (props: any) => {
   function search(value: string) {
     // Clear previous higlighting
     chartRef.current.clearHighlighting();
+    searchRecords = [];
 
     // Get chart nodes
     const data: any = chartRef.current.data() as any;
@@ -35,6 +37,7 @@ const OrgChartComponent = (props: any) => {
       ) {
         // If matches, mark node as highlighted
         d._highlighted = true;
+        searchRecords.push({id : d.id, viewed : false});
       }
     });
 
@@ -54,93 +57,92 @@ const OrgChartComponent = (props: any) => {
     );
   }
 
+  function setSearchRecords() {
+    const rec = searchRecords.find((record : any) => !record.viewed);
+    if(rec) {
+      chartRef.current.setCentered(rec.id).render();
+      rec.viewed = true;
+    } else {
+      searchRecords.forEach((record : any) => {
+          record.viewed = false;
+      });
+      setSearchRecords();
+    }
+  }
+
   props.setZoom(zoom);
   props.setSearch(search);
+  props.setSearchNext(setSearchRecords);
 
   // We need to manipulate DOM
   useEffect(() => {
     if (props.data && d3Container.current) {
-      chartRef.current
+      var content = chartRef.current
         .container(d3Container.current)
         .data(props.data)
         .nodeWidth((_d) => 360)
-        .initialZoom(0.7)
-        .nodeHeight((_d) => getCellHeight(_d)) //145
+        
+        .initialZoom(0.8)
+        .nodeHeight((_d) =>150 ) //145
         .childrenMargin((_d) => 50)
         .compactMarginBetween((_d) => 50)
         .compactMarginPair((_d) => 80)
         .setActiveNodeCentered(true)
-        .nodeContent(function (d: any, i, arr, state) {
-          const backgroundColor =
-            d.data.id == props.mapping.recordIdValue ? "#FFFFFF" : "#FFFFFF";
-          const borderColor =
-            d.data.id == props.mapping.recordIdValue ? "#FF0000" : "#E4E2E9";
+        .nodeContent(function (d: any) {
+          const isActiveNode = d.data.id === props.mapping.recordIdValue;
+          const backgroundColor = "#FFFFFF";
+          const borderColor = isActiveNode ? "#FF0000" : "#E4E2E9";
+          const statusColor = d.data.name.statecode == 0 ? "#58BC3A" : "#b7b7b7"; 
+
           const textMainColor = "#08011E";
           const textColor = "#716E7B";
-          const [firstWord, secondWord] =
-            d.data.name.value != null ? d.data.name.value!.split(" ") : "";
-          const initials = [firstWord, secondWord]
-            .map((word) => {
-              if (word) return word[0];
+          const initials = (d.data.name.value || "")
+            .split(" ")
+            .slice(0, 2)
+            .map((word : any) => word?.[0]?.toUpperCase() || "")
+            .join("");
+        
+          const attributes = d.data.attributes.map((attribute : any) => {
+              return attribute?.value
+                ? `<div style="display:flex;align-items:center" title="${attribute.displayName}">
+                     ${getIcon(attribute.type)}&nbsp;${attribute.value}
+                   </div>`
+                : "";
             })
-            .join("")
-            .toUpperCase();
-
-          const imageDiffVert = 25 + 2;
-
-          const attribute1 =
-            d.data.attribute1 != null && d.data.attribute1.value != null
-              ? `<div style="display:flex;align-items:center" title="${
-                  d.data.attribute1.displayName
-                }">${getIcon(d.data.attribute1.type)}&nbsp; ${d.data.attribute1
-                  .value!}</div>`
-              : "";
-
-          const attribute2 =
-            d.data.attribute2 != null && d.data.attribute2.value != null
-              ? `<div style="display:flex;align-items:center" title="${
-                  d.data.attribute2.displayName
-                }">${getIcon(d.data.attribute2.type)}&nbsp; ${d.data.attribute2
-                  .value!}</div>`
-              : "";
-
-          const attribute3 =
-            d.data.attribute3 != null && d.data.attribute3.value != null
-              ? `<div style="display:flex;align-items:center" title="${
-                  d.data.attribute3.displayName
-                }">${getIcon(d.data.attribute3.type)}&nbsp; ${d.data.attribute3
-                  .value!}</div>`
-              : "";
-
-          return ` 
-                <div style='width:${
-                  d.width
-                }px;height:${d.height}px;padding-top:${imageDiffVert - 2}px;padding-left:1px;padding-right:1px'>
-                        <div style="font-family: 'Inter', sans-serif;background-color:${backgroundColor};  margin-left:-1px;width:${d.width - 2}px;height:${d.height - imageDiffVert}px;border-radius:10px;border: 1px solid ${borderColor};">
-                            <div style="display:flex;justify-content:flex-end;margin-top:5px;margin-right:8px;color:${textColor}"><span id="navi_${d.data.id}">${getIcon("link")}</span></div>
-                            <div style="background-color:${backgroundColor};margin-top:${-imageDiffVert - 20}px;margin-left:${15}px;border-radius:100px;width:50px;height:50px;" ></div>
-                            <div style="margin-top:${
-                              -imageDiffVert - 20
-                            }px;">   <span style="display: inline-block;background-color: ${getRandomColor()};color: #fff;border-radius: 50%;font-size: 18px;line-height: 40px;width: 40px;height: 40px;text-align: center;margin-left: 20px;font-family:'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;font-weight:600;">${initials}</span></div>
-                            <div style="font-size:20px;color:${textMainColor};margin-left:20px;margin-top:10px;"> 
-                              ${
-                                d.data.name.value != null
-                                  ? d.data.name.value
-                                  : ""
-                              } 
-                            </div>
-                            <div style="color:${textColor};margin-left:20px;margin-top:3px;font-size:12px;"> 
-                              ${attribute1}
-                              ${attribute2}
-                              ${attribute3}
-                            </div>
-
-                        </div>
-                    </div>
-                            `;
+            .join("");
+        
+          return `
+            <div style='width:${d.width}px;height:${d.height}px;padding-top:27px;padding-left:1px;padding-right:1px'>
+              <div style="font-family: 'Inter', sans-serif;background-color:${backgroundColor};margin-left:-1px;width:${d.width - 2}px;height:${d.height - 27}px;border-radius:10px;border: 1px solid ${borderColor};">
+                <div style="display:flex;justify-content:flex-end;margin-top:5px;margin-right:8px;color:${textColor}">
+                  <span id="navi_${d.data.id}">${getIcon("link")}</span>&nbsp;
+                              <span title="${d.data.name.statecode == 0 ? "Active" : "Inactive"}" style="height: 15px;width: 15px;background-color: ${statusColor};border-radius: 50%; display: inline-block;"></span>
+                </div>
+                <div style="background-color:${backgroundColor};margin-top:-45px;margin-left:15px;border-radius:100px;width:50px;height:50px;"></div>
+                <div style="margin-top:-45px;">
+                  <span style="display: inline-block;background-color: ${getRandomColor()};color: #fff;border-radius: 50%;font-size: 18px;line-height: 40px;width: 40px;height: 40px;text-align: center;margin-left: 20px;font-family:'Segoe UI', sans-serif;font-weight:600;">
+                    ${initials}
+                  </span>
+                </div>
+                <div style="font-size:20px;color:${textMainColor};margin-left:20px;margin-top:5px;width:320px;overflow:hidden;height:23px;">
+                  ${d.data.name.value || ""}
+                </div>
+                <div style="color:${textColor};margin-left:20px;margin-top:3px;font-size:12px;overflow:scroll;height: 82px;">
+                  ${attributes}
+                </div>
+              </div>
+            </div>`;
         })
         .expandAll()
-        .setCentered(props.mapping.recordIdValue)
+        
+
+        if(props.size.width && props.size.width != -1)
+          content = content.svgWidth(props.size.width);
+
+        if(props.size.height && props.size.height != -1)
+          content = content.svgHeight(props.size.height);
+
+        content = content.setCentered(props.mapping.recordIdValue)
         .render();
 
       addListener();
@@ -153,20 +155,6 @@ const OrgChartComponent = (props: any) => {
     </div>
   );
 
-  // Define the cell Height based on the available properties
-  function getCellHeight(d: any) {
-    let cellHeight = 90;
-    if (d.data.attribute1 != null) {
-      cellHeight += 20;
-    }
-    if (d.data.attribute2 != null) {
-      cellHeight += 20;
-    }
-    if (d.data.attribute3 != null) {
-      cellHeight += 20;
-    }
-    return cellHeight;
-  }
 
   // Standard navigate functions
   function navigate(id: string) {

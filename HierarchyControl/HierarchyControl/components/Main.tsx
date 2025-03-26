@@ -3,23 +3,25 @@ import * as React from "react";
 import OrgChartComponent from "./OrgChartComponent";
 import { fieldDefinition, Mapping } from "../EntitiesDefinition";
 import { Button, Input } from "@fluentui/react-components";
-import {
-  ZoomInRegular,
-  ZoomOutRegular,
-  SearchRegular,
-  PageFitRegular,
-} from "@fluentui/react-icons";
+import {ZoomInRegular,ZoomOutRegular,SearchRegular,PageFitRegular,ArrowNextRegular} from "@fluentui/react-icons";
 
 const App = (props: any) => {
   const [data, setData] = useState(null);
   const [jsonMappingControl, setJsonMappingControl] = useState(null);
+  const [searchOnGoing, setSearchOnGoing] = useState(true);
+
   const jsonMapping = JSON.parse(props.jsonMapping);
+
+  // Check if the JSON input is valid
+  jsonInputCheck();
+
   const contextInfo = props.context.mode.contextInfo;
   jsonMapping.entityName = contextInfo.entityTypeName;
 
   const fields: fieldDefinition[] = extractFields(jsonMapping);
   let clickZoom: any = null;
   let searchNode: any = null;
+  let searchNextNode : any = null;
 
   useEffect(() => {
     const getAllData = async () => {
@@ -56,18 +58,14 @@ const App = (props: any) => {
       const getChildrenData =
         await props.context.webAPI.retrieveMultipleRecords(
           jsonMapping.entityName,
-          `?$filter=Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${getTopParentDataId}')&$select=${concatFields}`
+          `?$filter=Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${getTopParentDataId}')&$select=${concatFields},statecode`
         );
 
       // format the data
-      const jsonData: any = formatJson(
-        getChildrenData.entities,
-        fields,
-        jsonMapping
-      );
+      const jsonData: any = formatJson(getChildrenData.entities, jsonMapping);
 
       // Update the mapping passed to the OrgChartComponent
-      setJsonMappingControl(jsonMapping);
+      setJsonMappingControl(jsonMapping as any);
       // set the data
       setData(jsonData);
     };
@@ -105,7 +103,16 @@ const App = (props: any) => {
             placeholder="Search"
             onChange={(e: any) => search(e.target.value)}
           />
+        )}&nbsp;
+          {jsonMapping.properties?.showSearch && (
+          <Button
+              icon={<ArrowNextRegular />}
+              onClick={() => searchNext()}
+              title="Search Next Result"
+              disabled={searchOnGoing}
+            />
         )}
+       
       </div>
       <div
         id="carfup_HierarchyControl"
@@ -123,7 +130,13 @@ const App = (props: any) => {
           mapping={jsonMappingControl}
           setZoom={(z: any) => (clickZoom = z)}
           setSearch={(s: any) => (searchNode = s)}
+          setSearchNext={(s: any) => (searchNextNode = s)}
           context={props.context}
+          size={{
+            width: jsonMapping.properties?.width ??
+            props.context.mode.allocatedWidth,
+            height: jsonMapping.properties?.height ??
+            props.context.mode.allocatedHeight}}
         />
       </div>
     </div>
@@ -135,14 +148,15 @@ const App = (props: any) => {
 
   function search(value: string) {
     searchNode(value);
+    setSearchOnGoing(value == "" || value == null);
   }
 
-  function renameKey(
-    obj: any,
-    oldKey: string,
-    newKey: string,
-    targetJson: any
-  ) {
+  function searchNext() {
+    searchNextNode();
+  }
+
+  // align the json data into the expected format of the org-chart component
+  function renameKey(obj: any,oldKey: string,newKey: string, targetJson: any) {
     if (oldKey) {
       if (["id", "parentId"].includes(newKey)) {
         targetJson[newKey] = obj[oldKey];
@@ -156,12 +170,21 @@ const App = (props: any) => {
           key = `${oldKey}@OData.Community.Display.V1.FormattedValue`;
         }
 
-        targetJson[newKey] = {
+        const details = {
           value: getValue(obj[key], type),
           type: type,
           displayName: fields.find((f: any) => f.webapiName === oldKey)
             ?.displayName,
+          statecode : obj.statecode
         };
+
+        if(newKey == "attribute") {
+          targetJson.push(details);
+        }
+        else {
+          targetJson[newKey] = details;
+        }
+        
       }
     }
   }
@@ -195,37 +218,25 @@ const App = (props: any) => {
     });
   }
 
-  function formatJson(jsonData: any, fields: any, mapping: any) {
+  function formatJson(jsonData: any, mapping: Mapping) {
     const targetJson: any[] = [];
     jsonData.forEach((obj: any) => {
       const propsTarget: any = {};
+      propsTarget.attributes = [];
       renameKey(obj, isLookup(mapping.recordIdField), "id", propsTarget);
       renameKey(obj, isLookup(mapping.parentField), "parentId", propsTarget);
-      renameKey(obj, isLookup(mapping.mapping.name), "name", propsTarget);
-      if (mapping.mapping.attribute1) {
-        renameKey(
-          obj,
-          isLookup(mapping.mapping.attribute1),
-          "attribute1",
-          propsTarget
-        );
-      }
-      if (mapping.mapping.attribute2) {
-        renameKey(
-          obj,
-          isLookup(mapping.mapping.attribute2),
-          "attribute2",
-          propsTarget
-        );
-      }
-      if (mapping.mapping.attribute3) {
-        renameKey(
-          obj,
-          isLookup(mapping.mapping.attribute3),
-          "attribute3",
-          propsTarget
-        );
-      }
+      
+      mapping.mapping.forEach((field: string, index : number) => {
+        // First attribute is the main name of the node
+        if(index == 0) {
+          renameKey(obj, isLookup(field), "name", propsTarget);
+        }
+        // Other attributes are displayed in the node details
+        else {
+          renameKey(obj, isLookup(field), "attribute", propsTarget.attributes);
+        }
+      });
+      
       targetJson.push(propsTarget);
     });
     return targetJson;
@@ -235,13 +246,19 @@ const App = (props: any) => {
     const fields: fieldDefinition[] = [];
     fields.push({ name: jsonMapping.recordIdField });
     fields.push({ name: jsonMapping.parentField });
-    fields.push({ name: jsonMapping.mapping.name });
+
+    jsonMapping.mapping.forEach((field: string) => {
+        fields.push({ name: field });
+      }
+    );
+
+    /*fields.push({ name: jsonMapping.mapping.name });
     if (jsonMapping.mapping.attribute1)
       fields.push({ name: jsonMapping.mapping.attribute1 });
     if (jsonMapping.mapping.attribute2)
       fields.push({ name: jsonMapping.mapping.attribute2 });
     if (jsonMapping.mapping.attribute3)
-      fields.push({ name: jsonMapping.mapping.attribute3 });
+      fields.push({ name: jsonMapping.mapping.attribute3 });*/
 
     if (jsonMapping.lookupOtherTable) {
       fields.push({ name: jsonMapping.lookupOtherTable });
@@ -311,6 +328,11 @@ const App = (props: any) => {
     }
 
     return lookupTableDetails;
+  }
+
+  function jsonInputCheck(){
+    if(jsonMapping.mapping.attribute1)
+      alert("Hierarchy control PCF : \nPlease make sure that you updated the JSON schema of the Hierarchy control to properly works.\n\nPlease go to https://github.com/carfup/PCF_HierarchyControl to have the new JSON schema.")
   }
 };
 
