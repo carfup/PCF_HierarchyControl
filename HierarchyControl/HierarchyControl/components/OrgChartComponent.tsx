@@ -125,10 +125,11 @@ const OrgChartComponent = (props: any) => {
                     ${initials}
                   </span>
                 </div>
-                <div style="font-size:20px;color:${textMainColor};margin-left:20px;margin-top:10px;">
+                <div style="font-size:20px;color:${textMainColor};margin-left:20px;margin-top:5px;">
                   ${d.data.name.value || ""}
                 </div>
-                <div style="color:${textColor};margin-left:20px;margin-top:3px;font-size:12px;">
+                <div style="color:${textColor};margin-left:20px;margin-top:3px;font-size:12px;overflow:scroll;height: 82px;">
+                  ${attributes}
                   ${attributes}
                 </div>
               </div>
