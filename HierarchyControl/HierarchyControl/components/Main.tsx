@@ -175,7 +175,12 @@ const App = (props: any) => {
           type: type,
           displayName: fields.find((f: any) => f.webapiName === oldKey)
             ?.displayName,
-          statecode : obj.statecode
+          statecode : obj.statecode,
+          targetRecord : type === "lookup" ? 
+          { 
+            table : obj[`${oldKey}@Microsoft.Dynamics.CRM.lookuplogicalname`],
+            id : obj[oldKey]
+          } : null
         };
 
         if(newKey == "attribute") {

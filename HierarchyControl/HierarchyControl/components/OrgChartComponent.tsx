@@ -50,10 +50,21 @@ const OrgChartComponent = (props: any) => {
     const data: any = chartRef.current.data() as any;
 
     // attach the click listener to call the navigate function and not trigger it on load
-    data.forEach((d: any) =>
-      document
-        .getElementById(`navi_${d.id}`)!
-        .addEventListener("click", () => navigate(d.id))
+    data.forEach((d: any) => {
+        // link to the record
+        document
+          .getElementById(`navi_${d.id}`)!
+          .addEventListener("click", () => navigate(d.id));
+
+           // link to the lookup attribute record
+          d.attributes.filter((record : any) => record.type === "lookup").forEach((attribute: any) => {
+          if(attribute.type === "lookup" && attribute.value) {
+              document.
+              getElementById(`navi_${d.id}_${attribute.displayName}_lookuplink`)!.
+              addEventListener("click", () => navigate(attribute.targetRecord.id, attribute.targetRecord.table));
+          }
+        })
+      }
     );
   }
 
@@ -104,8 +115,8 @@ const OrgChartComponent = (props: any) => {
         
           const attributes = d.data.attributes.map((attribute : any) => {
               return attribute?.value
-                ? `<div style="display:flex;align-items:center" title="${attribute.displayName}">
-                     ${getIcon(attribute.type)}&nbsp;${attribute.value}
+                ? `<div style="display:flex;align-items:center" title="${attribute.displayName}" id="navi_${d.data.id}_${attribute.displayName}_lookuplink">
+                     ${getIcon(attribute.type)}&nbsp;${attribute.value} 
                    </div>`
                 : "";
             })
@@ -157,10 +168,10 @@ const OrgChartComponent = (props: any) => {
 
 
   // Standard navigate functions
-  function navigate(id: string) {
+  function navigate(id: string, entityName: string = props.mapping.entityName) {
     var pageInput = {
       pageType: "entityrecord",
-      entityName: props.mapping.entityName,
+      entityName: entityName,
       entityId: id, //replace with actual ID
     };
 
