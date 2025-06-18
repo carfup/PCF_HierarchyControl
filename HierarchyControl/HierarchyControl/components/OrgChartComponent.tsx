@@ -101,10 +101,12 @@ const OrgChartComponent = (props: any) => {
         .setActiveNodeCentered(true)
         .nodeContent(function (d: any) {
           const isActiveNode = d.data.id === props.mapping.recordIdValue;
+          const statutDefinition = {
+            displayName : d.data.name.statecode !== undefined ?(d.data.name.statecode == 0 ? "Active" : "Inactive") : "",
+            color : d.data.name.statecode !== undefined ? (d.data.name.statecode == 0 ? "#58BC3A" : "#b7b7b7") : ""
+          }
           const backgroundColor = "#FFFFFF";
-          const borderColor = isActiveNode ? "#FF0000" : "#E4E2E9";
-          const statusColor = d.data.name.statecode == 0 ? "#58BC3A" : "#b7b7b7"; 
-
+          const borderColor = isActiveNode ? "#FF0000" : "#E4E2E9";          
           const textMainColor = "#08011E";
           const textColor = "#716E7B";
           const initials = (d.data.name.value || "")
@@ -127,7 +129,7 @@ const OrgChartComponent = (props: any) => {
               <div style="font-family: 'Inter', sans-serif;background-color:${backgroundColor};margin-left:-1px;width:${d.width - 2}px;height:${d.height - 27}px;border-radius:10px;border: 1px solid ${borderColor};">
                 <div style="display:flex;justify-content:flex-end;margin-top:5px;margin-right:8px;color:${textColor}">
                   <span id="navi_${d.data.id}">${getIcon("link")}</span>&nbsp;
-                              <span title="${d.data.name.statecode == 0 ? "Active" : "Inactive"}" style="height: 15px;width: 15px;background-color: ${statusColor};border-radius: 50%; display: inline-block;"></span>
+                              <span title="${statutDefinition.displayName}" style="height: 15px;width: 15px;background-color: ${statutDefinition.color};border-radius: 50%; display: inline-block;"></span>
                 </div>
                 <div style="background-color:${backgroundColor};margin-top:-45px;margin-left:15px;border-radius:100px;width:50px;height:50px;"></div>
                 <div style="margin-top:-45px;">

@@ -50,6 +50,9 @@ const App = (props: any) => {
           ? jsonMapping.recordIdValue
           : getTopParentData.entities[0][jsonMapping.recordIdField];
 
+      const isStateCodeAware = dataEM._isStateModelAware;
+;
+
       // get all records below the top parent
       const concatFields = fields
         .filter((f: fieldDefinition) => f.webapiName)
@@ -58,8 +61,7 @@ const App = (props: any) => {
       const getChildrenData =
         await props.context.webAPI.retrieveMultipleRecords(
           jsonMapping.entityName,
-          `?$filter=Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${getTopParentDataId}')&$select=${concatFields},statecode`
-        );
+          `?$filter=Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${getTopParentDataId}')&$select=${concatFields}${isStateCodeAware ? ",statecode" : ""}`        );
 
       // format the data
       const jsonData: any = formatJson(getChildrenData.entities, jsonMapping);
@@ -175,7 +177,7 @@ const App = (props: any) => {
           type: type,
           displayName: fields.find((f: any) => f.webapiName === oldKey)
             ?.displayName,
-          statecode : obj.statecode,
+          statecode : obj.statecode !== undefined ? obj.statecode : null,
           targetRecord : type === "lookup" ? 
           { 
             table : obj[`${oldKey}@Microsoft.Dynamics.CRM.lookuplogicalname`],
