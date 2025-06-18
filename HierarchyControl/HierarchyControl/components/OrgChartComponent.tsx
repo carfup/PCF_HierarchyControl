@@ -57,11 +57,17 @@ const OrgChartComponent = (props: any) => {
           .addEventListener("click", () => navigate(d.id));
 
            // link to the lookup attribute record
-          d.attributes.filter((record : any) => record.type === "lookup").forEach((attribute: any) => {
+          d.attributes.filter((record : any) => record.type === "lookup" || record.type === "url").forEach((attribute: any) => {
           if(attribute.type === "lookup" && attribute.value) {
               document.
               getElementById(`navi_${d.id}_${attribute.displayName}_lookuplink`)!.
               addEventListener("click", () => navigate(attribute.targetRecord.id, attribute.targetRecord.table));
+          }
+
+          if(attribute.type === "url" && attribute.value) {
+              document.
+              getElementById(`navi_${d.id}_${attribute.displayName}_lookuplink`)!.
+              addEventListener("click", () => externalUrl(attribute.value));
           }
         })
       }
@@ -185,6 +191,11 @@ const OrgChartComponent = (props: any) => {
         // Handle errors
       }
     );
+  }
+
+  function externalUrl(url : string){
+    // Open the URL in a new tab
+    window.open(url, "_blank");
   }
 
   // Get the icon based on the type

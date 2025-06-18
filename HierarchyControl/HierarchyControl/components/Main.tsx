@@ -50,7 +50,7 @@ const App = (props: any) => {
           ? jsonMapping.recordIdValue
           : getTopParentData.entities[0][jsonMapping.recordIdField];
 
-      const isStateCodeAware = dataEM._isStateModelAware;
+      const isStateCodeAware = dataEM.IsStateModelAware;
 ;
 
       // get all records below the top parent
