@@ -139,9 +139,14 @@ const OrgChartComponent = (props: any) => {
                 </div>
                 <div style="background-color:${backgroundColor};margin-top:-45px;margin-left:15px;border-radius:100px;width:50px;height:50px;"></div>
                 <div style="margin-top:-45px;">
-                  <span style="display: inline-block;background-color: ${getRandomColor()};color: #fff;border-radius: 50%;font-size: 18px;line-height: 40px;width: 40px;height: 40px;text-align: center;margin-left: 20px;font-family:'Segoe UI', sans-serif;font-weight:600;">
+                  ${d.data.image?.value ?
+                    `<span style="display: inline-block;color: #fff;border-radius: 50%;width: 40px;height: 40px;text-align: center;margin-left: 17px;">
+                    ${`<img src="https://carfupdev.crm12.dynamics.com/${d.data.image.value}" style="width: 40px;height: 40px;border-radius:50%;border:${getRandomColor()};border-style: solid;border-width: thin;"></img>`}
+                  </span>` :
+                  `<span style="display: inline-block;background-color: ${getRandomColor()};color: #fff;border-radius: 50%;font-size: 18px;line-height: 40px;width: 40px;height: 40px;text-align: center;margin-left: 20px;font-family:'Segoe UI', sans-serif;font-weight:600;">
                     ${initials}
                   </span>
+                  `}
                 </div>
                 <div style="font-size:20px;color:${textMainColor};margin-left:20px;margin-top:5px;width:320px;overflow:hidden;height:23px;">
                   ${d.data.name.value || ""}

@@ -7,6 +7,7 @@ export interface Mapping {
   properties?: propertiesMapping;
   isCurrentRecord?: boolean;
   recordIdValue?: string;
+  image?: string;
 }
 
 export interface attributesMapping {
@@ -21,6 +22,7 @@ export interface propertiesMapping {
   width?: number;
   showZoom?: boolean;
   showSearch?: boolean;
+  showRecordPicture?: boolean;
 }
 
 export interface fieldDefinition {
