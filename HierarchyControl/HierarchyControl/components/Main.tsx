@@ -150,6 +150,7 @@ const App = (props: any) => {
             props.context.mode.allocatedWidth,
             height: jsonMapping.properties?.height ??
             props.context.mode.allocatedHeight}}
+          position={jsonMapping.properties?.position}
         />
       </div>
     </div>

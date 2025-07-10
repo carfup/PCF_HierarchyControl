@@ -166,8 +166,10 @@ const OrgChartComponent = (props: any) => {
         if(props.size.height && props.size.height != -1)
           content = content.svgHeight(props.size.height);
 
-        content = content.setCentered(props.mapping.recordIdValue)
-        .render();
+        if(props.position != undefined || props.position === "centered" ) {
+          content = content.setCentered(props.mapping.recordIdValue)
+        }
+        content.render();
 
       addListener();
     }

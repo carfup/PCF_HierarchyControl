@@ -23,6 +23,7 @@ export interface propertiesMapping {
   showZoom?: boolean;
   showSearch?: boolean;
   showRecordPicture?: boolean;
+  position?: undefined | "top" | "centered";
 }
 
 export interface fieldDefinition {
