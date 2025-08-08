@@ -31,13 +31,17 @@ const OrgChartComponent = (props: any) => {
 
     // Loop over data and check if input value matches any name
     data.forEach((d: any) => {
-      if (
-        value != "" &&
-        d.name.value.toLowerCase().includes(value.toLowerCase())
-      ) {
+      if (value != "") {
+        // check if the name and attributes values match the search value
+        const nameMatch = d.name.value.toLowerCase().includes(value.toLowerCase());
+        const attributesMatch = d.attributes.some((attribute: any) => {
+          return attribute.value && attribute.value.toLowerCase().includes(value.toLowerCase());
+        });
         // If matches, mark node as highlighted
-        d._highlighted = true;
-        searchRecords.push({id : d.id, viewed : false});
+        if (nameMatch || attributesMatch) {
+          d._highlighted = true;
+          searchRecords.push({id : d.id, viewed : false});
+        }
       }
     });
 
@@ -98,7 +102,6 @@ const OrgChartComponent = (props: any) => {
         .container(d3Container.current)
         .data(props.data)
         .nodeWidth((_d) => 360)
-        
         .initialZoom(0.8)
         .nodeHeight((_d) =>150 ) //145
         .childrenMargin((_d) => 50)
