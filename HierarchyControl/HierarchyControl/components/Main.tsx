@@ -26,6 +26,15 @@ const App = (props: any) => {
   useEffect(() => {
     const getAllData = async () => {
       // Get attributes details
+
+      if(jsonMapping.properties.showRecordPicture) {
+        const hasPicture = await hasEntityPicture(jsonMapping.entityName); 
+        if (hasPicture) {
+          jsonMapping.image = `${hasPicture}_url`;
+          fields.push({  name: hasPicture });
+        }
+      }
+
       let dataEM = await props.context.utils.getEntityMetadata(
         jsonMapping.entityName,
         fields.map((u: fieldDefinition) => u.name)
@@ -50,16 +59,20 @@ const App = (props: any) => {
           ? jsonMapping.recordIdValue
           : getTopParentData.entities[0][jsonMapping.recordIdField];
 
+      const isStateCodeAware = dataEM.IsStateModelAware;
+      
+
       // get all records below the top parent
       const concatFields = fields
         .filter((f: fieldDefinition) => f.webapiName)
         .map((f: fieldDefinition) => f.webapiName)
         .join(",");
+
+
       const getChildrenData =
         await props.context.webAPI.retrieveMultipleRecords(
           jsonMapping.entityName,
-          `?$filter=Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${getTopParentDataId}')&$select=${concatFields},statecode`
-        );
+          `?$filter=Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${getTopParentDataId}')&$select=${concatFields}${isStateCodeAware ? ",statecode" : ""}`        );
 
       // format the data
       const jsonData: any = formatJson(getChildrenData.entities, jsonMapping);
@@ -137,6 +150,7 @@ const App = (props: any) => {
             props.context.mode.allocatedWidth,
             height: jsonMapping.properties?.height ??
             props.context.mode.allocatedHeight}}
+          position={jsonMapping.properties?.position}
         />
       </div>
     </div>
@@ -175,7 +189,12 @@ const App = (props: any) => {
           type: type,
           displayName: fields.find((f: any) => f.webapiName === oldKey)
             ?.displayName,
-          statecode : obj.statecode
+          statecode : obj.statecode !== undefined ? obj.statecode : null,
+          targetRecord : type === "lookup" ? 
+          { 
+            table : obj[`${oldKey}@Microsoft.Dynamics.CRM.lookuplogicalname`],
+            id : obj[oldKey]
+          } : null
         };
 
         if(newKey == "attribute") {
@@ -206,14 +225,16 @@ const App = (props: any) => {
   function getAttributeDetails(em: any) {
     em.Attributes.forEach((attr: any) => {
       const index = fields.findIndex((f: any) => f.name === attr.LogicalName);
+      fields[index].type = returnType(attr);
       fields[index].webapiName =
         em.PrimaryAttributeId != attr.LogicalName &&
         (attr.AttributeTypeName == "lookup" ||
           attr.AttributeTypeName == "owner" ||
           attr.AttributeTypeName == "customer")
           ? `_${attr.LogicalName}_value`
-          : attr.LogicalName;
-      fields[index].type = returnType(attr);
+          : 
+          fields[index].type === "image" ? `${attr.LogicalName}_url` : attr.LogicalName;
+      
       fields[index].displayName = attr.DisplayName;
     });
   }
@@ -225,7 +246,8 @@ const App = (props: any) => {
       propsTarget.attributes = [];
       renameKey(obj, isLookup(mapping.recordIdField), "id", propsTarget);
       renameKey(obj, isLookup(mapping.parentField), "parentId", propsTarget);
-      
+      renameKey(obj, isLookup(mapping.image!), "image", propsTarget);
+
       mapping.mapping.forEach((field: string, index : number) => {
         // First attribute is the main name of the node
         if(index == 0) {
@@ -251,14 +273,6 @@ const App = (props: any) => {
         fields.push({ name: field });
       }
     );
-
-    /*fields.push({ name: jsonMapping.mapping.name });
-    if (jsonMapping.mapping.attribute1)
-      fields.push({ name: jsonMapping.mapping.attribute1 });
-    if (jsonMapping.mapping.attribute2)
-      fields.push({ name: jsonMapping.mapping.attribute2 });
-    if (jsonMapping.mapping.attribute3)
-      fields.push({ name: jsonMapping.mapping.attribute3 });*/
 
     if (jsonMapping.lookupOtherTable) {
       fields.push({ name: jsonMapping.lookupOtherTable });
@@ -328,6 +342,15 @@ const App = (props: any) => {
     }
 
     return lookupTableDetails;
+  }
+
+  async function hasEntityPicture(entityName: string) : Promise<string> {
+    const pictureInfo = await props.context.webAPI.retrieveMultipleRecords(
+        "entityimageconfig",
+        `?$filter=parententitylogicalname eq '${entityName}'&$select=primaryimageattribute`
+      );
+
+    return pictureInfo.entities.length > 0 ? pictureInfo.entities[0].primaryimageattribute : "";
   }
 
   function jsonInputCheck(){

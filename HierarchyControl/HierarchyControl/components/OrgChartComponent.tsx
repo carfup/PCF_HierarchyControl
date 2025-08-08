@@ -31,13 +31,17 @@ const OrgChartComponent = (props: any) => {
 
     // Loop over data and check if input value matches any name
     data.forEach((d: any) => {
-      if (
-        value != "" &&
-        d.name.value.toLowerCase().includes(value.toLowerCase())
-      ) {
+      if (value != "") {
+        // check if the name and attributes values match the search value
+        const nameMatch = d.name.value.toLowerCase().includes(value.toLowerCase());
+        const attributesMatch = d.attributes.some((attribute: any) => {
+          return attribute.value && attribute.value.toLowerCase().includes(value.toLowerCase());
+        });
         // If matches, mark node as highlighted
-        d._highlighted = true;
-        searchRecords.push({id : d.id, viewed : false});
+        if (nameMatch || attributesMatch) {
+          d._highlighted = true;
+          searchRecords.push({id : d.id, viewed : false});
+        }
       }
     });
 
@@ -50,10 +54,27 @@ const OrgChartComponent = (props: any) => {
     const data: any = chartRef.current.data() as any;
 
     // attach the click listener to call the navigate function and not trigger it on load
-    data.forEach((d: any) =>
-      document
-        .getElementById(`navi_${d.id}`)!
-        .addEventListener("click", () => navigate(d.id))
+    data.forEach((d: any) => {
+        // link to the record
+        document
+          .getElementById(`navi_${d.id}`)!
+          .addEventListener("click", () => navigate(d.id));
+
+           // link to the lookup attribute record
+          d.attributes.filter((record : any) => record.type === "lookup" || record.type === "url").forEach((attribute: any) => {
+          if(attribute.type === "lookup" && attribute.value) {
+              document.
+              getElementById(`navi_${d.id}_${attribute.displayName}_lookuplink`)!.
+              addEventListener("click", () => navigate(attribute.targetRecord.id, attribute.targetRecord.table));
+          }
+
+          if(attribute.type === "url" && attribute.value) {
+              document.
+              getElementById(`navi_${d.id}_${attribute.displayName}_lookuplink`)!.
+              addEventListener("click", () => externalUrl(attribute.value));
+          }
+        })
+      }
     );
   }
 
@@ -81,7 +102,6 @@ const OrgChartComponent = (props: any) => {
         .container(d3Container.current)
         .data(props.data)
         .nodeWidth((_d) => 360)
-        
         .initialZoom(0.8)
         .nodeHeight((_d) =>150 ) //145
         .childrenMargin((_d) => 50)
@@ -90,10 +110,12 @@ const OrgChartComponent = (props: any) => {
         .setActiveNodeCentered(true)
         .nodeContent(function (d: any) {
           const isActiveNode = d.data.id === props.mapping.recordIdValue;
+          const statutDefinition = {
+            displayName : d.data.name.statecode !== undefined ?(d.data.name.statecode == 0 ? "Active" : "Inactive") : "",
+            color : d.data.name.statecode !== undefined ? (d.data.name.statecode == 0 ? "#58BC3A" : "#b7b7b7") : ""
+          }
           const backgroundColor = "#FFFFFF";
-          const borderColor = isActiveNode ? "#FF0000" : "#E4E2E9";
-          const statusColor = d.data.name.statecode == 0 ? "#58BC3A" : "#b7b7b7"; 
-
+          const borderColor = isActiveNode ? "#FF0000" : "#E4E2E9";          
           const textMainColor = "#08011E";
           const textColor = "#716E7B";
           const initials = (d.data.name.value || "")
@@ -104,8 +126,8 @@ const OrgChartComponent = (props: any) => {
         
           const attributes = d.data.attributes.map((attribute : any) => {
               return attribute?.value
-                ? `<div style="display:flex;align-items:center" title="${attribute.displayName}">
-                     ${getIcon(attribute.type)}&nbsp;${attribute.value}
+                ? `<div style="display:flex;align-items:center" title="${attribute.displayName}" id="navi_${d.data.id}_${attribute.displayName}_lookuplink">
+                     ${getIcon(attribute.type)}&nbsp;${attribute.value} 
                    </div>`
                 : "";
             })
@@ -116,18 +138,23 @@ const OrgChartComponent = (props: any) => {
               <div style="font-family: 'Inter', sans-serif;background-color:${backgroundColor};margin-left:-1px;width:${d.width - 2}px;height:${d.height - 27}px;border-radius:10px;border: 1px solid ${borderColor};">
                 <div style="display:flex;justify-content:flex-end;margin-top:5px;margin-right:8px;color:${textColor}">
                   <span id="navi_${d.data.id}">${getIcon("link")}</span>&nbsp;
-                              <span title="${d.data.name.statecode == 0 ? "Active" : "Inactive"}" style="height: 15px;width: 15px;background-color: ${statusColor};border-radius: 50%; display: inline-block;"></span>
+                              <span title="${statutDefinition.displayName}" style="height: 15px;width: 15px;background-color: ${statutDefinition.color};border-radius: 50%; display: inline-block;"></span>
                 </div>
                 <div style="background-color:${backgroundColor};margin-top:-45px;margin-left:15px;border-radius:100px;width:50px;height:50px;"></div>
                 <div style="margin-top:-45px;">
-                  <span style="display: inline-block;background-color: ${getRandomColor()};color: #fff;border-radius: 50%;font-size: 18px;line-height: 40px;width: 40px;height: 40px;text-align: center;margin-left: 20px;font-family:'Segoe UI', sans-serif;font-weight:600;">
+                  ${d.data.image?.value ?
+                    `<span style="display: inline-block;color: #fff;border-radius: 50%;width: 40px;height: 40px;text-align: center;margin-left: 17px;">
+                    ${`<img src="https://carfupdev.crm12.dynamics.com/${d.data.image.value}" style="width: 40px;height: 40px;border-radius:50%;border:${getRandomColor()};border-style: solid;border-width: thin;"></img>`}
+                  </span>` :
+                  `<span style="display: inline-block;background-color: ${getRandomColor()};color: #fff;border-radius: 50%;font-size: 18px;line-height: 40px;width: 40px;height: 40px;text-align: center;margin-left: 20px;font-family:'Segoe UI', sans-serif;font-weight:600;">
                     ${initials}
                   </span>
+                  `}
                 </div>
-                <div style="font-size:20px;color:${textMainColor};margin-left:20px;margin-top:5px;width:320px;overflow:hidden;height:23px;">
+                <div style="font-size:20px;color:${textMainColor};margin-left:15px;margin-top:5px;width:340px;overflow:hidden; word-wrap: break-word;">
                   ${d.data.name.value || ""}
                 </div>
-                <div style="color:${textColor};margin-left:20px;margin-top:3px;font-size:12px;overflow:scroll;height: 82px;">
+                <div style="color:${textColor};margin-left:15px;margin-top:3px;font-size:12px;overflow:scroll;height: 82px;">
                   ${attributes}
                 </div>
               </div>
@@ -142,8 +169,10 @@ const OrgChartComponent = (props: any) => {
         if(props.size.height && props.size.height != -1)
           content = content.svgHeight(props.size.height);
 
-        content = content.setCentered(props.mapping.recordIdValue)
-        .render();
+        if(props.position == undefined || props.position === "centered" ) {
+          content = content.setCentered(props.mapping.recordIdValue)
+        }
+        content.render();
 
       addListener();
     }
@@ -157,10 +186,10 @@ const OrgChartComponent = (props: any) => {
 
 
   // Standard navigate functions
-  function navigate(id: string) {
+  function navigate(id: string, entityName: string = props.mapping.entityName) {
     var pageInput = {
       pageType: "entityrecord",
-      entityName: props.mapping.entityName,
+      entityName: entityName,
       entityId: id, //replace with actual ID
     };
 
@@ -172,6 +201,11 @@ const OrgChartComponent = (props: any) => {
         // Handle errors
       }
     );
+  }
+
+  function externalUrl(url : string){
+    // Open the URL in a new tab
+    window.open(url, "_blank");
   }
 
   // Get the icon based on the type
