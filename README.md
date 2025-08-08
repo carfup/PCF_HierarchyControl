@@ -28,14 +28,16 @@ JSON Details : (sample with the account table)
 {
 	"parentField" : "parentaccountid",  REQUIRED - Parent Record Field Link to the same Account Table (with the Hierarchy relationship enabled)
 	"recordIdField" : "accountid",      REQUIRED - Primary Field of the Account table
-	"lookupOtherTable" : "mylookupfieldid" OPTIONAL - Allow you to display the hierarchy from a lookup perspective (the base will be the lookup record)
+	"lookupOtherTable" : "mylookupfieldid" OPTIONAL - Allow you to display the hierarchy for a related table (the base will be the lookup record)
 						To properly configure it, you need to align the "parentField" and "recordIdField" with the lookup table definition
 	"mapping" : ["name","telephone1","websiteurl", "address1_line1"], REQUIRED - List of attributes to display, first one will be the node title, others will be displayed in order
 	"properties" : {
 		"height": 500,    OPTIONAL - Force the Height in px (By default use the height available)
 		"width": 1200,     OPTIONAL - Force the Width in px (By default use the full width available).
 		"showZoom": true,     OPTIONAL - Display the zoom in, zoom out, fit to screen buttons (Default value : false)
-		"showSearch": true     OPTIONAL - Display a search bar to find a node in the hierarchy (Default value : false)
+		"showSearch": true,     OPTIONAL - Display a search bar to find a node in the hierarchy (Default value : false)
+        "showRecordPicture": true,     OPTIONAL - Display the record picture instead of the initials (Default value : false)
+		"position": undefined | "top" | "centered",     OPTIONAL - Change the position of the hierarchical view : Top (center on the top parent record), centered or nothing focus on the current record
 	}
 }
 ```
