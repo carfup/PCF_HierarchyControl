@@ -72,7 +72,7 @@ const App = (props: any) => {
       const getChildrenData =
         await props.context.webAPI.retrieveMultipleRecords(
           jsonMapping.entityName,
-          `?$filter=Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${getTopParentDataId}')&$select=${concatFields}${isStateCodeAware ? ",statecode" : ""}`        );
+          `?$filter=Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${jsonMapping.properties?.showOnlyDirectDescendants ? getTopParentDataId : jsonMapping.recordIdValue}')&$select=${concatFields}${isStateCodeAware ? ",statecode" : ""}`        );
 
       // format the data
       const jsonData: any = formatJson(getChildrenData.entities, jsonMapping);
