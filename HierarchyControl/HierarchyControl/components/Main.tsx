@@ -180,7 +180,7 @@ const App = (props: any) => {
         const type: string | undefined = fields.find(
           (f: any) => f.webapiName === oldKey
         )?.type;
-        if (type && ["lookup", "datetime", "picklist"].includes(type)) {
+        if (type && ["lookup", "datetime", "picklist", "status"].includes(type)) {
           key = `${oldKey}@OData.Community.Display.V1.FormattedValue`;
         }
 
