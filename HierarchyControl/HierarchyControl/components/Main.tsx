@@ -47,17 +47,22 @@ const App = (props: any) => {
       // retrive attributes details and formatting
       getAttributeDetails(dataEM);
 
-      const getTopParentData =
-        await props.context.webAPI.retrieveMultipleRecords(
-          jsonMapping.entityName,
-          `?$filter=Microsoft.Dynamics.CRM.Above(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${jsonMapping.recordIdValue}') and _${jsonMapping.parentField}_value eq null`
-        );
+      let refId = jsonMapping.recordIdValue;
 
-      // Get to parent to retrieve all records below it
-      const getTopParentDataId =
-        getTopParentData.entities.length == 0
-          ? jsonMapping.recordIdValue
-          : getTopParentData.entities[0][jsonMapping.recordIdField];
+      if(!jsonMapping.properties?.showOnlyDirectDescendants)
+      {
+        const getTopParentData =
+          await props.context.webAPI.retrieveMultipleRecords(
+            jsonMapping.entityName,
+            `?$filter=Microsoft.Dynamics.CRM.Above(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${jsonMapping.recordIdValue}') and _${jsonMapping.parentField}_value eq null`
+          );
+
+        // Get to parent to retrieve all records below it
+        refId =
+          getTopParentData.entities.length == 0
+            ? jsonMapping.recordIdValue
+            : getTopParentData.entities[0][jsonMapping.recordIdField];
+      }
 
       const isStateCodeAware = dataEM.IsStateModelAware;
       
@@ -69,10 +74,24 @@ const App = (props: any) => {
         .join(",");
 
 
-      const getChildrenData =
+      let getChildrenData =
         await props.context.webAPI.retrieveMultipleRecords(
           jsonMapping.entityName,
-          `?$filter=Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${getTopParentDataId}')&$select=${concatFields}${isStateCodeAware ? ",statecode" : ""}`        );
+          `?$filter=Microsoft.Dynamics.CRM.UnderOrEqual(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${refId}')&$select=${concatFields}${isStateCodeAware ? ",statecode" : ""}`        );
+
+      if(jsonMapping.properties?.showOnlyDirectDescendants){
+        // We retrieve the lowest child and get all records above
+        const latestChild = getChildrenData.entities[getChildrenData.entities.length -1];
+        if (latestChild) {
+          refId = latestChild[jsonMapping.recordIdField];
+        
+          getChildrenData =
+            await props.context.webAPI.retrieveMultipleRecords(
+              jsonMapping.entityName,
+              `?$filter=Microsoft.Dynamics.CRM.AboveOrEqual(PropertyName='${jsonMapping.recordIdField}',PropertyValue='${refId}')&$select=${concatFields}${isStateCodeAware ? ",statecode" : ""}`
+            );
+        }
+      }
 
       // format the data
       const jsonData: any = formatJson(getChildrenData.entities, jsonMapping);
@@ -180,7 +199,7 @@ const App = (props: any) => {
         const type: string | undefined = fields.find(
           (f: any) => f.webapiName === oldKey
         )?.type;
-        if (type && ["lookup", "datetime", "picklist"].includes(type)) {
+        if (type && ["lookup", "datetime", "picklist", "status"].includes(type)) {
           key = `${oldKey}@OData.Community.Display.V1.FormattedValue`;
         }
 

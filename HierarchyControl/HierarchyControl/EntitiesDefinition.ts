@@ -24,6 +24,7 @@ export interface propertiesMapping {
   showSearch?: boolean;
   showRecordPicture?: boolean;
   position?: undefined | "top" | "centered";
+  showOnlyDirectDescendants?: boolean;
 }
 
 export interface fieldDefinition {
