@@ -22,8 +22,7 @@ Here are the steps to configure and use the control :
 | hostingField | Field to attach the control (text field)                            |    x     |
 | JsonMapping  | JSON data containing the parameters which allow the control to work |    x     |
 
-JSON Details : (sample with the account table)
-
+JSON Details : (sample with the account table) - see below for the properties explanations
 ```json
 {
 	"parentField" : "parentaccountid",  REQUIRED - Parent Record Field Link to the same Account Table (with the Hierarchy relationship enabled)
@@ -37,10 +36,28 @@ JSON Details : (sample with the account table)
 		"showZoom": true,     OPTIONAL - Display the zoom in, zoom out, fit to screen buttons (Default value : false)
 		"showSearch": true,     OPTIONAL - Display a search bar to find a node in the hierarchy (Default value : false)
         "showRecordPicture": true,     OPTIONAL - Display the record picture instead of the initials (Default value : false)
-		"position": undefined | "top" | "centered",     OPTIONAL - Change the position of the hierarchical view : Top (center on the top parent record), centered or nothing focus on the current record
+		"position": "top" | "centered",     OPTIONAL - Change the position of the hierarchical view : Top - center on the top parent record (Default value : centered)
+		"showOnlyDirectDescendants" : true, OPTIONAL - Display only the direct parents and children of the current record (Default value : false)
 	}
 }
 ```
+
+| Properties    | Description                                                         | Required | Default Value |
+| :----------- | :------------------------------------------------------------------ | :------: | :------:|
+| parentField | Parent Record Field Link to the same Account Table (with the Hierarchy relationship enabled)                           |    x     | |
+| recordIdField  | Primary Field of the Account table |    x     | |
+| lookupOtherTable  | Allow you to display the hierarchy for a related table (the base will be the lookup record) |         | |
+| mapping  | List of attributes to display, first one will be the node title, others will be displayed in order |    x     | |
+| properties  | List of extra possibilities for the control |         | |
+| properties.height (int) | Force the Height in px |         | Height available |
+| properties.width (int)  | Force the Width in px  |         | Width available |
+| properties.showZoom (bool)  | Display the zoom in, zoom out, fit to screen buttons  |         | false | 
+| properties.showSearch (bool) | Display a search bar to find a node in the hierarchy  |         | false|
+| properties.showRecordPicture (bool) | Display the record picture instead of the initials  |        | false |
+| properties.position (string) | Change the position of the hierarchical view : Top - center on the top parent record |         | centered|
+| properties.showOnlyDirectDescendants (bool)  | Display only the direct parents and children of the current record |         | false|
+
+
 
 Here is how it will looking between the mapping and the rendering :
 ![](https://carfupstorage.blob.core.windows.net/sharex/2025_02_10_17-04-01_POWERPNT.png)
